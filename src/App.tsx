@@ -48,13 +48,16 @@ export default function App() {
   const change = useDocumentSlot();
   const [activeHunk, setActiveHunk] = useState<number>();
 
-  const diff = useMemo(
-    () =>
-      original.doc && change.doc
-        ? diffDocuments(original.doc.paragraphs, change.doc.paragraphs)
-        : undefined,
-    [original.doc, change.doc],
-  );
+  const diff = useMemo(() => {
+    if (!original.doc || !change.doc) return undefined;
+    const started = performance.now();
+    const result = diffDocuments(original.doc.paragraphs, change.doc.paragraphs);
+    console.info(
+      `[redline] diff: ${original.doc.paragraphs.length}×${change.doc.paragraphs.length} ¶ → ` +
+        `${result.rows.length} rows, ${result.hunks.length} hunks in ${Math.round(performance.now() - started)}ms`,
+    );
+    return result;
+  }, [original.doc, change.doc]);
 
   useEffect(() => {
     setActiveHunk(diff && diff.hunks.length > 0 ? 0 : undefined);

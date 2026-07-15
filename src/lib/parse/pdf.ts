@@ -1,5 +1,6 @@
 import * as pdfjs from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { filterRunningLines } from './runningLines';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -73,16 +74,16 @@ export async function parsePdf(file: File): Promise<string[]> {
   const loadingTask = pdfjs.getDocument({ data });
   const doc = await loadingTask.promise;
   try {
-    const paragraphs: string[] = [];
+    const pages: PositionedLine[][] = [];
     for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber++) {
       const page = await doc.getPage(pageNumber);
       const content = await page.getTextContent();
       const items = content.items.flatMap((item): PositionedItem[] =>
         'str' in item ? [{ str: item.str, transform: item.transform, height: item.height }] : [],
       );
-      paragraphs.push(...paragraphsFromLines(linesFromTextContent(items)));
+      pages.push(linesFromTextContent(items));
     }
-    return paragraphs;
+    return filterRunningLines(pages).flatMap(paragraphsFromLines);
   } finally {
     await loadingTask.destroy();
   }

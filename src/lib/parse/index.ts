@@ -12,6 +12,7 @@ export class ParseError extends Error {}
 export async function parseFile(file: File): Promise<LoadedDocument> {
   const name = file.name;
   const extension = name.toLowerCase().split('.').pop() ?? '';
+  const started = performance.now();
 
   let paragraphs: string[];
   try {
@@ -34,5 +35,8 @@ export async function parseFile(file: File): Promise<LoadedDocument> {
   if (paragraphs.length === 0) {
     throw new ParseError(`No text found in "${name}". Is it a scanned/image-only document?`);
   }
+  console.info(
+    `[redline] parse: "${name}" → ${paragraphs.length} ¶ in ${Math.round(performance.now() - started)}ms`,
+  );
   return { name, paragraphs };
 }
