@@ -1,4 +1,46 @@
+@import '@fontsource/literata/400.css';
+@import '@fontsource/literata/400-italic.css';
+@import '@fontsource/literata/600.css';
+@import '@fontsource/literata/700.css';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
 @import 'tailwindcss';
+
+@theme {
+  /* The desk: banker's-lamp green, the surface everything sits on. */
+  --color-desk: #2f3a32;
+  --color-desk-deep: #27302a;
+  --color-desk-line: #46544a;
+  --color-desk-text: #cfd6c9;
+  --color-desk-muted: #8d9a8c;
+
+  /* The paper: warm document white with near-black ink. */
+  --color-paper: #fbfaf4;
+  --color-paper-shade: #f1efe4;
+  --color-ink: #232720;
+  --color-ink-muted: #6f7466;
+  --color-rule: #ddd9c8;
+
+  /* Redline marks. */
+  --color-added-bg: #dcefc8;
+  --color-added-ink: #295b24;
+  --color-added-edge: #4c8a3f;
+  --color-removed-bg: #f3d3ce;
+  --color-removed-ink: #7e2a20;
+  --color-removed-edge: #b0503f;
+
+  /* Highlighter for the active amendment; stamp red for index marks. */
+  --color-highlighter: #f5e6a8;
+  --color-highlighter-soft: #fbf3d0;
+  --color-stamp: #a63a2b;
+
+  --font-serif: 'Literata', Georgia, 'Times New Roman', serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
 
 html,
 body,
@@ -7,7 +49,14 @@ body,
 }
 
 body {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-desk);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-highlighter);
+  outline-offset: 2px;
 }
 
 /* Empty cell opposite an added paragraph (nothing existed here in the Original). */
@@ -15,7 +64,7 @@ body {
   background-image: repeating-linear-gradient(
     -45deg,
     transparent 0 6px,
-    rgb(226 232 240 / 0.6) 6px 8px
+    rgb(221 217 200 / 0.55) 6px 8px
   );
 }
 
@@ -23,7 +72,30 @@ body {
 .placeholder-stripes-removed {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgb(254 226 226 / 0.5) 0 6px,
-    rgb(252 165 165 / 0.5) 6px 8px
+    rgb(243 211 206 / 0.45) 0 6px,
+    rgb(176 80 63 / 0.25) 6px 8px
   );
+}
+
+/* Highlighter sweep when jumping to an amendment. */
+@keyframes highlighter-fade {
+  from {
+    background-color: var(--color-highlighter);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.flash-highlight {
+  animation: highlighter-fade 1.6s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-highlight {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
 }

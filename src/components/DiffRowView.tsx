@@ -2,11 +2,11 @@ import type { DiffRow, Segment } from '../lib/diff/types';
 
 function SegmentSpan({ segment }: { segment: Segment }) {
   if (segment.type === 'added') {
-    return <span className="rounded-sm bg-green-200/80 text-green-950">{segment.text}</span>;
+    return <span className="rounded-[2px] bg-added-bg text-added-ink">{segment.text}</span>;
   }
   if (segment.type === 'removed') {
     return (
-      <span className="rounded-sm bg-red-200/70 text-red-950 line-through decoration-red-700/60">
+      <span className="rounded-[2px] bg-removed-bg text-removed-ink line-through decoration-removed-edge/80">
         {segment.text}
       </span>
     );
@@ -16,24 +16,26 @@ function SegmentSpan({ segment }: { segment: Segment }) {
 
 function Cell({ segments, className }: { segments?: Segment[]; className: string }) {
   return (
-    <div className={`min-w-0 whitespace-pre-wrap border-b border-slate-100 px-4 py-1.5 text-sm leading-relaxed ${className}`}>
+    <div
+      className={`min-w-0 whitespace-pre-wrap px-7 py-2 font-serif text-[15px] leading-relaxed text-ink ${className}`}
+    >
       {segments?.map((segment, i) => <SegmentSpan key={i} segment={segment} />)}
     </div>
   );
 }
 
 const LEFT_STYLES: Record<DiffRow['type'], string> = {
-  unchanged: 'text-slate-700',
-  modified: 'bg-red-50/60 text-slate-800',
-  removed: 'bg-red-50 text-slate-800 border-l-2 border-l-red-400',
+  unchanged: '',
+  modified: 'bg-removed-bg/25',
+  removed: 'bg-removed-bg/40 shadow-[inset_3px_0_0_var(--color-removed-edge)]',
   added: 'placeholder-stripes',
 };
 
 const RIGHT_STYLES: Record<DiffRow['type'], string> = {
-  unchanged: 'text-slate-700',
-  modified: 'bg-green-50/60 text-slate-800',
+  unchanged: '',
+  modified: 'bg-added-bg/25',
   removed: 'placeholder-stripes-removed',
-  added: 'bg-green-50 text-slate-800 border-l-2 border-l-green-500',
+  added: 'bg-added-bg/40 shadow-[inset_3px_0_0_var(--color-added-edge)]',
 };
 
 interface DiffRowViewProps {
@@ -47,10 +49,16 @@ export function DiffRowView({ row, rowIndex, active }: DiffRowViewProps) {
     <div
       id={`row-${rowIndex}`}
       data-row-type={row.type}
-      className={`grid grid-cols-2 ${active ? 'ring-2 ring-inset ring-amber-400' : ''}`}
+      className={`grid grid-cols-2 ${active ? 'flash-highlight shadow-[inset_0_0_0_2px_var(--color-highlighter)]' : ''}`}
     >
-      <Cell segments={row.left} className={`border-r border-slate-200 ${LEFT_STYLES[row.type]}`} />
-      <Cell segments={row.right} className={RIGHT_STYLES[row.type]} />
+      <Cell
+        segments={row.left}
+        className={`border-r border-rule/70 shadow-[inset_-6px_0_8px_-8px_rgb(35_39_32/0.5)] ${LEFT_STYLES[row.type]}`}
+      />
+      <Cell
+        segments={row.right}
+        className={`shadow-[inset_6px_0_8px_-8px_rgb(35_39_32/0.5)] ${RIGHT_STYLES[row.type]}`}
+      />
     </div>
   );
 }

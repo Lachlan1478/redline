@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { diffDocuments } from './lib/diff/diffDocuments';
 import { parseFile, ParseError } from './lib/parse';
 import type { LoadedDocument } from './lib/parse';
+import { AmendmentRail } from './components/AmendmentRail';
 import { ChangeSidebar } from './components/ChangeSidebar';
 import { DiffView } from './components/DiffView';
 import { FileDropzone } from './components/FileDropzone';
@@ -60,15 +61,15 @@ export default function App() {
   }, [diff]);
 
   return (
-    <div className="flex h-full flex-col bg-slate-50">
-      <header className="flex flex-wrap items-center gap-4 border-b border-slate-200 bg-white px-4 py-3">
-        <h1 className="text-lg font-bold tracking-tight text-slate-800">
-          Redline
-          <span className="ml-2 hidden text-xs font-normal text-slate-400 sm:inline">
-            side-by-side document comparison
+    <div className="flex h-full flex-col bg-desk">
+      <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-desk-line/60 bg-desk-deep px-5 py-3">
+        <h1 className="font-serif text-xl font-bold tracking-[0.08em] text-paper">
+          R<span className="text-[0.85em]">EDLINE</span>
+          <span className="ml-3 hidden border-l border-desk-line pl-3 font-sans text-[11px] font-normal tracking-normal text-desk-muted lg:inline">
+            side-by-side comparison for circulars &amp; prudential standards
           </span>
         </h1>
-        <div className="flex min-w-0 flex-1 gap-3">
+        <div className="flex min-w-0 max-w-3xl flex-1 gap-3">
           <FileDropzone label="Original" {...original} onFile={original.load} />
           <FileDropzone label="Change" {...change} onFile={change.load} />
         </div>
@@ -77,9 +78,10 @@ export default function App() {
         {diff && original.doc && change.doc ? (
           <>
             <ChangeSidebar hunks={diff.hunks} activeHunk={activeHunk} onSelect={setActiveHunk} />
-            <main className="min-w-0 flex-1 overflow-y-auto bg-white">
+            <AmendmentRail diff={diff} activeHunk={activeHunk} onSelect={setActiveHunk} />
+            <main className="min-w-0 flex-1 overflow-y-auto bg-paper">
               {diff.hunks.length === 0 && (
-                <p className="border-b border-slate-200 bg-blue-50 px-4 py-2 text-sm text-blue-800">
+                <p className="border-b border-rule bg-paper-shade px-7 py-2 font-serif text-sm italic text-ink-muted">
                   The documents are identical — no differences found.
                 </p>
               )}
@@ -93,15 +95,24 @@ export default function App() {
           </>
         ) : (
           <main className="flex flex-1 items-center justify-center p-8">
-            <div className="max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-              <h2 className="mb-2 text-xl font-semibold text-slate-800">Compare two documents</h2>
-              <p className="mb-4 text-sm leading-relaxed text-slate-600">
-                Load an <strong>Original</strong> and a <strong>Change</strong> document above.
-                Additions are highlighted in <span className="rounded bg-green-200 px-1">green</span>,
-                removals in <span className="rounded bg-red-200 px-1 line-through">red</span>, and
-                unchanged sections collapse so you review only what changed.
+            <div className="max-w-md border-2 border-double border-ink/60 bg-paper p-10 text-center shadow-[0_18px_40px_-18px_rgb(0_0_0/0.55)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-muted">
+                For review
               </p>
-              <p className="text-xs text-slate-400">
+              <h2 className="mb-4 mt-2 font-serif text-2xl font-semibold text-ink">
+                Compare two documents
+              </h2>
+              <p className="mb-5 font-serif text-[15px] leading-relaxed text-ink">
+                Load an <strong>Original</strong> and a <strong>Change</strong> document above.
+                Additions are marked in{' '}
+                <span className="rounded-[2px] bg-added-bg px-1 text-added-ink">green</span>,
+                removals in{' '}
+                <span className="rounded-[2px] bg-removed-bg px-1 text-removed-ink line-through">
+                  red
+                </span>
+                , and unchanged sections fold away so you review only what changed.
+              </p>
+              <p className="text-xs text-ink-muted">
                 Supports .docx and .pdf. Documents are processed entirely in your browser — nothing
                 is uploaded to any server.
               </p>
