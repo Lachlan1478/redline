@@ -1,32 +1,75 @@
-# React + TypeScript + Vite
+# Redline
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Side-by-side comparison dashboard for legal documents and prudential standards.
 
-Currently, two official plugins are available:
+Counterparties often iterate on circulars that run to 100+ pages, where each
+round changes only a handful of clauses. Redline lets you load an **Original**
+and a **Change** version of a document and review *only* what changed —
+additions highlighted in green, removals in red strikethrough, and long
+unchanged sections collapsed out of the way.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Everything runs in your browser.** Documents are parsed and diffed entirely
+client-side — nothing is ever uploaded to a server.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Input formats:** `.docx` (via [mammoth](https://github.com/mwilliamson/mammoth.js))
+  and PDF (via [pdf.js](https://mozilla.github.io/pdf.js/), best-effort paragraph
+  detection). Drag-and-drop or click to browse.
+- **Two-pass diff engine:** paragraphs are aligned first (LCS diff plus a
+  similarity-based pairing of edited paragraphs), then a word-level diff runs
+  inside each modified paragraph — so a 100-page document with three edits
+  shows exactly three changes.
+- **Aligned side-by-side view:** matched paragraphs always sit next to each
+  other; both panes scroll together and can never drift out of alignment.
+- **Collapse unchanged sections:** long unchanged runs fold into an expandable
+  bar, keeping two paragraphs of context around each change.
+- **Change navigation:** a sidebar lists every change with prev/next buttons
+  and a `Change 3 of 12` counter; click any change to jump to it.
 
-## Expanding the Oxlint configuration
+## Usage
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Hosted at **https://lachlan1478.github.io/redline/** — or run locally:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev        # http://localhost:5173/redline/
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Load an Original document on the left dropzone and the Change document on the
+right. The right pane is the Change document: green text was added; red
+struck-through text in the left pane was removed (a striped marker on the
+right shows where).
+
+## Development
+
+```bash
+npm run dev                     # dev server
+npx vitest run                  # unit tests (diff engine + collapse logic)
+npm run build                   # type-check + production build
+node scripts/make-fixtures.mjs  # regenerate sample docs in e2e/fixtures/
+```
+
+Sample documents for trying the app live in `e2e/fixtures/` (a fictional
+prudential standard in original/changed form, as both .docx and .pdf).
+
+### Architecture
+
+```
+src/
+  lib/parse/    File → paragraphs (docx.ts, pdf.ts)
+  lib/diff/     align.ts (paragraph alignment) → wordDiff.ts (word-level)
+                → diffDocuments.ts (rows + navigable change hunks)
+  components/   FileDropzone, DiffView (collapsing), DiffRowView, ChangeSidebar
+```
+
+The design spec lives in `docs/superpowers/specs/`.
+
+## Roadmap
+
+- Export the redline to Word/PDF; printable view
+- AI plain-English summary of what changed between versions
+- Version timeline across many iterations of one circular
+- Toggle to ignore whitespace/formatting-only changes
+- Clause-level tagging against prudential standard section numbers
+- Plain-text paste input
