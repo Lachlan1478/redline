@@ -1,13 +1,35 @@
+import { useState } from 'react';
+import { amendmentSummary } from '../lib/diff/summary';
 import type { ChangeHunk } from '../lib/diff/types';
 
 interface ChangeSidebarProps {
   hunks: ChangeHunk[];
   activeHunk?: number;
   onSelect: (index: number) => void;
+  /** Document names used in the copyable amendment summary. */
+  leftName?: string;
+  rightName?: string;
 }
 
-export function ChangeSidebar({ hunks, activeHunk, onSelect }: ChangeSidebarProps) {
+export function ChangeSidebar({
+  hunks,
+  activeHunk,
+  onSelect,
+  leftName = 'Original',
+  rightName = 'Change',
+}: ChangeSidebarProps) {
   const current = activeHunk ?? 0;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(amendmentSummary(hunks, leftName, rightName));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — leave the button state unchanged.
+    }
+  };
   return (
     <aside className="hidden w-72 shrink-0 flex-col border-r border-desk-line/60 bg-desk md:flex">
       <div className="border-b border-desk-line/60 px-4 pb-3 pt-4">
@@ -72,9 +94,20 @@ export function ChangeSidebar({ hunks, activeHunk, onSelect }: ChangeSidebarProp
           );
         })}
       </ol>
-      <p className="border-t border-desk-line/60 px-4 py-3 text-[11px] leading-snug text-desk-muted">
-        Documents are parsed and compared entirely in your browser — nothing is uploaded.
-      </p>
+      <div className="border-t border-desk-line/60 px-4 py-3">
+        <button
+          type="button"
+          data-testid="copy-summary"
+          onClick={() => void handleCopySummary()}
+          disabled={hunks.length === 0}
+          className="mb-2 w-full rounded-sm border border-desk-line px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-desk-text hover:border-desk-text/60 hover:bg-desk-deep disabled:opacity-40"
+        >
+          {copied ? 'Copied ✓' : 'Copy amendment summary'}
+        </button>
+        <p className="text-[11px] leading-snug text-desk-muted">
+          Documents are parsed and compared entirely in your browser — nothing is uploaded.
+        </p>
+      </div>
     </aside>
   );
 }
