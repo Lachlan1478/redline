@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { diffDocuments } from '../../lib/diff/diffDocuments';
 import { parseFile, ParseError } from '../../lib/parse';
 import type { LoadedDocument } from '../../lib/parse';
-import { AmendmentRail } from '../AmendmentRail';
-import { ChangeSidebar } from '../ChangeSidebar';
-import { DiffView } from '../DiffView';
+import { DiffWorkspace } from '../DiffWorkspace';
 import { FileDropzone } from '../FileDropzone';
 
 interface DocumentSlot {
@@ -46,7 +44,6 @@ function useDocumentSlot(): DocumentSlot {
 export function CompareView() {
   const original = useDocumentSlot();
   const change = useDocumentSlot();
-  const [activeHunk, setActiveHunk] = useState<number>();
 
   const diff = useMemo(() => {
     if (!original.doc || !change.doc) return undefined;
@@ -59,10 +56,6 @@ export function CompareView() {
     return result;
   }, [original.doc, change.doc]);
 
-  useEffect(() => {
-    setActiveHunk(diff && diff.hunks.length > 0 ? 0 : undefined);
-  }, [diff]);
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex gap-3 border-b border-desk-line/60 bg-desk-deep px-5 py-2.5">
@@ -73,23 +66,12 @@ export function CompareView() {
       </div>
       <div className="flex min-h-0 flex-1">
         {diff && original.doc && change.doc ? (
-          <>
-            <ChangeSidebar hunks={diff.hunks} activeHunk={activeHunk} onSelect={setActiveHunk} />
-            <AmendmentRail diff={diff} activeHunk={activeHunk} onSelect={setActiveHunk} />
-            <main className="min-w-0 flex-1 overflow-y-auto bg-paper">
-              {diff.hunks.length === 0 && (
-                <p className="border-b border-rule bg-paper-shade px-7 py-2 font-serif text-sm italic text-ink-muted">
-                  The documents are identical — no differences found.
-                </p>
-              )}
-              <DiffView
-                diff={diff}
-                originalName={original.doc.name}
-                changeName={change.doc.name}
-                activeHunk={activeHunk}
-              />
-            </main>
-          </>
+          <DiffWorkspace
+            diff={diff}
+            leftName={original.doc.name}
+            rightName={change.doc.name}
+            identicalNote="The documents are identical — no differences found."
+          />
         ) : (
           <main className="flex flex-1 items-center justify-center p-8">
             <div className="max-w-md border-2 border-double border-ink/60 bg-paper p-10 text-center shadow-[0_18px_40px_-18px_rgb(0_0_0/0.55)]">

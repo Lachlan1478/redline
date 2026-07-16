@@ -3,6 +3,8 @@ import { useRef } from 'react';
 interface AssembleToolbarProps {
   templateName: string;
   issueCount: number;
+  mode: 'draft' | 'deviation';
+  onModeChange: (mode: 'draft' | 'deviation') => void;
   onExport: () => void;
   onSave: () => void;
   onLoad: (file: File) => void;
@@ -12,6 +14,8 @@ interface AssembleToolbarProps {
 export function AssembleToolbar({
   templateName,
   issueCount,
+  mode,
+  onModeChange,
   onExport,
   onSave,
   onLoad,
@@ -32,6 +36,19 @@ export function AssembleToolbar({
       )}
       {loadError && <span className="text-xs text-removed-bg">{loadError}</span>}
       <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          data-testid="toggle-deviation"
+          aria-pressed={mode === 'deviation'}
+          onClick={() => onModeChange(mode === 'deviation' ? 'draft' : 'deviation')}
+          className={`rounded-sm border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] ${
+            mode === 'deviation'
+              ? 'border-stamp bg-stamp/20 text-removed-bg'
+              : 'border-desk-line text-desk-text hover:border-desk-text/60 hover:bg-desk-deep'
+          }`}
+        >
+          {mode === 'deviation' ? 'Back to draft' : 'Redline vs base'}
+        </button>
         <button type="button" className={buttonClass} onClick={() => inputRef.current?.click()}>
           Load deal
         </button>
