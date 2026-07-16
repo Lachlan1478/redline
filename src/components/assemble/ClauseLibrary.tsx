@@ -1,4 +1,5 @@
 import { isIncluded } from '../../lib/assemble/numbering';
+import type { ImportNote } from '../../lib/assemble/import';
 import type { Block, FieldDef, RenderWarnings } from '../../lib/assemble/types';
 import { SidePanel } from './SidePanel';
 
@@ -8,6 +9,7 @@ interface ClauseLibraryProps {
   warnings: RenderWarnings;
   titles: Map<string, string>;
   fields: FieldDef[];
+  importNotes?: ImportNote[];
   onToggle: (blockId: string, include: boolean) => void;
 }
 
@@ -17,11 +19,13 @@ export function ClauseLibrary({
   warnings,
   titles,
   fields,
+  importNotes = [],
   onToggle,
 }: ClauseLibraryProps) {
   const fieldLabel = (id: string) => fields.find((f) => f.id === id)?.label ?? id;
   const activeCount = optionalBlocks.filter((b) => isIncluded(b, included)).length;
-  const issueCount = warnings.brokenRefs.length + warnings.missingFields.length;
+  const issueCount =
+    warnings.brokenRefs.length + warnings.missingFields.length + importNotes.length;
 
   return (
     <SidePanel
@@ -53,6 +57,15 @@ export function ClauseLibrary({
             <p className="mt-1.5 text-[11px] leading-snug text-highlighter/90">
               Unfilled terms: {warnings.missingFields.map(fieldLabel).join(', ')}.
             </p>
+          )}
+          {importNotes.length > 0 && (
+            <ul className="mt-1.5 space-y-1">
+              {importNotes.map((note, i) => (
+                <li key={i} className="text-[11px] leading-snug text-desk-muted">
+                  Import: {note.message}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       }
