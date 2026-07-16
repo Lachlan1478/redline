@@ -1,5 +1,5 @@
 import { parseDocx } from './docx';
-import { parsePdf } from './pdf';
+import { splitParagraphs } from './paragraphs';
 
 export interface LoadedDocument {
   name: string;
@@ -7,6 +7,15 @@ export interface LoadedDocument {
 }
 
 export class ParseError extends Error {}
+
+/** Build a document straight from text — pasted content or a .txt file. */
+export function documentFromText(name: string, text: string): LoadedDocument {
+  const paragraphs = splitParagraphs(text);
+  if (paragraphs.length === 0) {
+    throw new ParseError('No text found — the pasted content is empty.');
+  }
+  return { name, paragraphs };
+}
 
 /** Parse a dropped/selected file into paragraphs, dispatching on file type. */
 export async function parseFile(file: File): Promise<LoadedDocument> {
@@ -19,9 +28,16 @@ export async function parseFile(file: File): Promise<LoadedDocument> {
     if (extension === 'docx') {
       paragraphs = await parseDocx(file);
     } else if (extension === 'pdf') {
+      // Lazy import: pdf.js is heavy and browser-only; splitting it keeps the
+      // main bundle lean and lets this module load in non-DOM environments.
+      const { parsePdf } = await import('./pdf');
       paragraphs = await parsePdf(file);
+    } else if (extension === 'txt' || extension === 'md') {
+      paragraphs = splitParagraphs(await file.text());
     } else {
-      throw new ParseError(`Unsupported file type ".${extension}" — please use .docx or .pdf.`);
+      throw new ParseError(
+        `Unsupported file type ".${extension}" — please use .docx, .pdf or .txt.`,
+      );
     }
   } catch (error) {
     if (error instanceof ParseError) throw error;

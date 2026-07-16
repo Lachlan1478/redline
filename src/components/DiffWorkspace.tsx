@@ -27,7 +27,13 @@ export function DiffWorkspace({ diff, leftName, rightName, identicalNote, banner
 
   return (
     <div className="flex min-h-0 flex-1">
-      <ChangeSidebar hunks={diff.hunks} activeHunk={activeHunk} onSelect={setActiveHunk} />
+      <ChangeSidebar
+        hunks={diff.hunks}
+        activeHunk={activeHunk}
+        onSelect={setActiveHunk}
+        leftName={leftName}
+        rightName={rightName}
+      />
       <AmendmentRail diff={diff} activeHunk={activeHunk} onSelect={setActiveHunk} />
       <main className="min-w-0 flex-1 overflow-y-auto bg-paper">
         {banner}

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { diffDocuments } from '../../lib/diff/diffDocuments';
-import { parseFile, ParseError } from '../../lib/parse';
+import { documentFromText, parseFile, ParseError } from '../../lib/parse';
 import type { LoadedDocument } from '../../lib/parse';
 import { DiffWorkspace } from '../DiffWorkspace';
 import { FileDropzone } from '../FileDropzone';
@@ -10,6 +10,7 @@ interface DocumentSlot {
   loading: boolean;
   error?: string;
   load: (file: File) => void;
+  loadText: (name: string, text: string) => void;
 }
 
 function useDocumentSlot(): DocumentSlot {
@@ -38,7 +39,19 @@ function useDocumentSlot(): DocumentSlot {
       });
   }, []);
 
-  return { doc, loading, error, load };
+  const loadText = useCallback((name: string, text: string) => {
+    requestId.current += 1; // supersede any in-flight file parse
+    setLoading(false);
+    try {
+      setDoc(documentFromText(name, text));
+      setError(undefined);
+    } catch (cause) {
+      setDoc(undefined);
+      setError(cause instanceof ParseError ? cause.message : 'Could not read the pasted text.');
+    }
+  }, []);
+
+  return { doc, loading, error, load, loadText };
 }
 
 export function CompareView() {
@@ -60,8 +73,18 @@ export function CompareView() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex gap-3 border-b border-desk-line/60 bg-desk-deep px-5 py-2.5">
         <div className="flex min-w-0 max-w-3xl flex-1 gap-3">
-          <FileDropzone label="Original" {...original} onFile={original.load} />
-          <FileDropzone label="Change" {...change} onFile={change.load} />
+          <FileDropzone
+            label="Original"
+            {...original}
+            onFile={original.load}
+            onPasteText={(text) => original.loadText('Pasted original', text)}
+          />
+          <FileDropzone
+            label="Change"
+            {...change}
+            onFile={change.load}
+            onPasteText={(text) => change.loadText('Pasted change', text)}
+          />
         </div>
       </div>
       <div className="flex min-h-0 flex-1">
