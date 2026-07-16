@@ -10,7 +10,20 @@ export interface FieldDef {
 export type Inline =
   | { t: 'text'; text: string }
   | { t: 'field'; fieldId: string }
-  | { t: 'ref'; targetId: string };
+  /** `word` overrides the template's reference word for this one reference. */
+  | { t: 'ref'; targetId: string; word?: string };
+
+export type LevelStyle = 'decimal' | 'alpha' | 'roman';
+
+/** How a template numbers its blocks and speaks about them. */
+export interface NumberingScheme {
+  /** Style per nesting depth; the last entry repeats for deeper levels. */
+  levels: LevelStyle[];
+  /** 'parenthetical' → 1. / (a) / (i), full "1(a)(i)". 'dotted' → 4. / 4.1 / 4.1.1. */
+  compose: 'parenthetical' | 'dotted';
+  /** The word references render with: Clause, Section, Condition, Article… */
+  refWord: string;
+}
 
 export interface Block {
   /** Stable identity — numbering may change, the id never does. */
@@ -30,6 +43,8 @@ export interface ContractTemplate {
   name: string;
   fields: FieldDef[];
   blocks: Block[];
+  /** Defaults to parenthetical 1./(a)/(i) with "Clause" when omitted. */
+  numbering?: NumberingScheme;
 }
 
 /** Everything deal-specific, serialisable as a local deal file. */

@@ -1,4 +1,4 @@
-import { computeNumbering, isIncluded } from './numbering';
+import { computeNumbering, DEFAULT_SCHEME, isIncluded } from './numbering';
 import type {
   Block,
   ContractTemplate,
@@ -17,7 +17,8 @@ import type {
  * warnings, never silently dropped.
  */
 export function renderDocument(template: ContractTemplate, deal: DealState): RenderedDocument {
-  const labels = computeNumbering(template.blocks, deal.included);
+  const scheme = template.numbering ?? DEFAULT_SCHEME;
+  const labels = computeNumbering(template.blocks, deal.included, scheme);
   const fieldsById = new Map<string, FieldDef>(template.fields.map((f) => [f.id, f]));
   const paragraphs: RenderedParagraph[] = [];
   const warnings: RenderWarnings = { brokenRefs: [], missingFields: [] };
@@ -45,7 +46,7 @@ export function renderDocument(template: ContractTemplate, deal: DealState): Ren
               warnings.brokenRefs.push({ fromId: block.id, targetId: inline.targetId });
               return '[missing clause]';
             }
-            return `Clause ${target.full}`;
+            return `${inline.word ?? scheme.refWord} ${target.full}`;
           }
         }
       })

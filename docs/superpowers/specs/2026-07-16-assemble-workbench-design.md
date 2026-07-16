@@ -128,6 +128,36 @@ cross-references into and out of them so renumbering is genuinely exercised.
 4. .docx export + deal save/load.
 5. Deviation redline.
 
+## Generality review (2026-07-16)
+
+The engine was pressure-tested with persona integration suites
+(`src/lib/assemble/personas.test.ts`): Corporate Law (SPA), trading-desk
+structurer (equity swap confirmation), Fixed Income (bond T&Cs), Asset Finance
+(aircraft lease). Capabilities added as a result:
+
+- **`NumberingScheme` per template**: level styles (decimal/alpha/roman),
+  parenthetical `1./(a)/(i)` vs dotted `4./4.1/4.1.1` composition, and a
+  configurable reference word (Clause / Section / Condition / Article).
+- **Per-reference word override** on ref tokens (e.g. one "Paragraph 4"
+  reference inside a Clause-speaking document).
+- **Unnumbered group headings**: preamble blocks are transparent to numbering,
+  so PART headings group conditions while numbering runs continuously.
+
+Known gaps, deliberately deferred (backlog, in priority order):
+
+1. **Variant groups** — either/or alternative wordings for one clause with
+   "exactly one included" validation (structurer fallback language).
+2. **Repeat groups** — stamp out a block subtree per asset/party (Asset
+   Finance: one Delivery/Redelivery set per aircraft) with per-instance fields.
+3. **Independent numbering domains** — Schedules/Annexes that restart
+   numbering and are referenced as "Schedule 2" while the main body uses
+   Clauses.
+4. **Typed value formatting** — currency/date/percent fields formatted on
+   render (e.g. "USD 10,000,000") rather than stored as display strings.
+
+One Assemble tab, template-agnostic: document-type differences live in the
+template definition (numbering scheme, fields, blocks), not in separate UIs.
+
 ## Testing
 
 - Engine: exhaustive unit tests (numbering across exclusions, nested labels,

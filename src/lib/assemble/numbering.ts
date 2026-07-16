@@ -1,4 +1,10 @@
-import type { Block, BlockLabel } from './types';
+import type { Block, BlockLabel, LevelStyle, NumberingScheme } from './types';
+
+export const DEFAULT_SCHEME: NumberingScheme = {
+  levels: ['decimal', 'alpha', 'roman'],
+  compose: 'parenthetical',
+  refWord: 'Clause',
+};
 
 /**
  * Whether a block is currently part of the document.
@@ -49,16 +55,22 @@ function toAlpha(n: number): string {
   return result;
 }
 
-/** Own/full label parts for the nth (1-based) numbered sibling at a depth. */
-function labelAt(depth: number, n: number): { own: string; part: string } {
-  switch (depth) {
-    case 0:
-      return { own: `${n}.`, part: `${n}` };
-    case 1:
-      return { own: `(${toAlpha(n)})`, part: `(${toAlpha(n)})` };
-    default:
-      return { own: `(${toRoman(n)})`, part: `(${toRoman(n)})` };
+function symbolFor(style: LevelStyle, n: number): string {
+  if (style === 'alpha') return toAlpha(n);
+  if (style === 'roman') return toRoman(n);
+  return `${n}`;
+}
+
+function makeLabel(scheme: NumberingScheme, depth: number, n: number, prefix: string): BlockLabel {
+  const style = scheme.levels[Math.min(depth, scheme.levels.length - 1)];
+  const symbol = symbolFor(style, n);
+  if (scheme.compose === 'dotted') {
+    const full = prefix ? `${prefix}.${symbol}` : symbol;
+    return { own: depth === 0 ? `${full}.` : full, full };
   }
+  const part = depth === 0 ? symbol : `(${symbol})`;
+  const full = prefix + part;
+  return { own: depth === 0 ? `${symbol}.` : part, full };
 }
 
 /**
@@ -66,27 +78,34 @@ function labelAt(depth: number, n: number): { own: string; part: string } {
  *
  * Numbers exist only in the returned map — they are recomputed from scratch on
  * every toggle, which is what makes add/remove mechanically safe.
+ *
+ * Preamble blocks (recitals, PART headings) take no number themselves and are
+ * transparent to numbering: their children share the surrounding counter, so
+ * conditions keep numbering continuously across PART headings.
  */
 export function computeNumbering(
   blocks: Block[],
   included: Record<string, boolean>,
+  scheme: NumberingScheme = DEFAULT_SCHEME,
 ): Map<string, BlockLabel> {
   const labels = new Map<string, BlockLabel>();
 
   const walk = (siblings: Block[], depth: number, prefix: string) => {
     let counter = 0;
-    for (const block of siblings) {
-      if (!isIncluded(block, included)) continue;
-      if (block.kind === 'preamble') {
-        walk(block.children, depth, prefix);
-        continue;
+    const visit = (group: Block[]) => {
+      for (const block of group) {
+        if (!isIncluded(block, included)) continue;
+        if (block.kind === 'preamble') {
+          visit(block.children);
+          continue;
+        }
+        counter += 1;
+        const label = makeLabel(scheme, depth, counter, prefix);
+        labels.set(block.id, label);
+        walk(block.children, depth + 1, label.full);
       }
-      counter += 1;
-      const { own, part } = labelAt(depth, counter);
-      const full = prefix + part;
-      labels.set(block.id, { own, full });
-      walk(block.children, depth + 1, full);
-    }
+    };
+    visit(siblings);
   };
 
   walk(blocks, 0, '');
