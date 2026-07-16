@@ -61,11 +61,18 @@ export interface BlockLabel {
   full: string;
 }
 
+/** One styled run within a rendered paragraph, for the live preview. */
+export interface ParagraphSegment {
+  kind: 'text' | 'field' | 'field-missing' | 'ref' | 'ref-broken';
+  text: string;
+}
+
 export interface RenderedParagraph {
   blockId: string;
   /** Full label like "3(a)(i)"; empty for unnumbered blocks (preamble). */
   label: string;
   text: string;
+  segments: ParagraphSegment[];
 }
 
 export interface RenderWarnings {

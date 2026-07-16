@@ -4,6 +4,7 @@ import type {
   ContractTemplate,
   DealState,
   FieldDef,
+  ParagraphSegment,
   RenderedDocument,
   RenderedParagraph,
   RenderWarnings,
@@ -24,33 +25,31 @@ export function renderDocument(template: ContractTemplate, deal: DealState): Ren
   const warnings: RenderWarnings = { brokenRefs: [], missingFields: [] };
   const missingSeen = new Set<string>();
 
-  const renderBody = (block: Block): string =>
-    block.body
-      .map((inline) => {
-        switch (inline.t) {
-          case 'text':
-            return inline.text;
-          case 'field': {
-            const value = deal.fieldValues[inline.fieldId]?.trim();
-            if (value) return value;
-            const field = fieldsById.get(inline.fieldId);
-            if (field && !missingSeen.has(field.id)) {
-              missingSeen.add(field.id);
-              warnings.missingFields.push(field.id);
-            }
-            return `[● ${field?.label ?? inline.fieldId}]`;
+  const renderBody = (block: Block): ParagraphSegment[] =>
+    block.body.map((inline): ParagraphSegment => {
+      switch (inline.t) {
+        case 'text':
+          return { kind: 'text', text: inline.text };
+        case 'field': {
+          const value = deal.fieldValues[inline.fieldId]?.trim();
+          if (value) return { kind: 'field', text: value };
+          const field = fieldsById.get(inline.fieldId);
+          if (field && !missingSeen.has(field.id)) {
+            missingSeen.add(field.id);
+            warnings.missingFields.push(field.id);
           }
-          case 'ref': {
-            const target = labels.get(inline.targetId);
-            if (!target) {
-              warnings.brokenRefs.push({ fromId: block.id, targetId: inline.targetId });
-              return '[missing clause]';
-            }
-            return `${inline.word ?? scheme.refWord} ${target.full}`;
-          }
+          return { kind: 'field-missing', text: `[● ${field?.label ?? inline.fieldId}]` };
         }
-      })
-      .join('');
+        case 'ref': {
+          const target = labels.get(inline.targetId);
+          if (!target) {
+            warnings.brokenRefs.push({ fromId: block.id, targetId: inline.targetId });
+            return { kind: 'ref-broken', text: '[missing clause]' };
+          }
+          return { kind: 'ref', text: `${inline.word ?? scheme.refWord} ${target.full}` };
+        }
+      }
+    });
 
   const walk = (blocks: Block[]) => {
     for (const block of blocks) {
@@ -58,9 +57,14 @@ export function renderDocument(template: ContractTemplate, deal: DealState): Ren
       const label = labels.get(block.id);
       const title = block.title ? `${block.title}. ` : '';
       const prefix = label ? `${label.own} ` : '';
-      const text = `${prefix}${title}${renderBody(block)}`.trim();
+      const lead = `${prefix}${title}`;
+      const segments: ParagraphSegment[] = [
+        ...(lead ? [{ kind: 'text' as const, text: lead }] : []),
+        ...renderBody(block),
+      ];
+      const text = segments.map((s) => s.text).join('').trim();
       if (text) {
-        paragraphs.push({ blockId: block.id, label: label?.full ?? '', text });
+        paragraphs.push({ blockId: block.id, label: label?.full ?? '', text, segments });
       }
       walk(block.children);
     }

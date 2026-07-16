@@ -117,6 +117,22 @@ describe('renderDocument', () => {
     expect(paragraphs.map((p) => p.blockId)).toEqual(['pre', 'payments', 'termination']);
   });
 
+  it('emits styled segments matching the joined text', () => {
+    const { paragraphs } = renderDocument(template, deal({ fieldValues: { party_a: 'Alpha' } }));
+    const pre = paragraphs.find((p) => p.blockId === 'pre')!;
+    expect(pre.segments.map((s) => s.kind)).toEqual([
+      'text',
+      'field',
+      'text',
+      'field-missing',
+      'text',
+    ]);
+    expect(pre.segments.map((s) => s.text).join('').trim()).toBe(pre.text);
+
+    const payments = paragraphs.find((p) => p.blockId === 'payments')!;
+    expect(payments.segments.some((s) => s.kind === 'ref' && s.text === 'Clause 2')).toBe(true);
+  });
+
   it('exposes labels for anchors and the deviation redline', () => {
     const { paragraphs } = renderDocument(template, deal());
     expect(paragraphs.find((p) => p.blockId === 'pre')?.label).toBe('');
