@@ -55,6 +55,16 @@ function toAlpha(n: number): string {
   return result;
 }
 
+/**
+ * Nesting depth encoded in a full label: "1(a)(i)" → 2, "4.1.1" → 2, "" → 0.
+ */
+export function labelDepth(full: string): number {
+  if (!full) return 0;
+  const parens = (full.match(/\(/g) ?? []).length;
+  if (parens > 0) return parens;
+  return full.split('.').length - 1;
+}
+
 function symbolFor(style: LevelStyle, n: number): string {
   if (style === 'alpha') return toAlpha(n);
   if (style === 'roman') return toRoman(n);
