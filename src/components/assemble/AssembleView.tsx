@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DealFileError, parseDealFile, serializeDeal } from '../../lib/assemble/dealFile';
+import { deviationDiff } from '../../lib/assemble/deviation';
 import { exportDocxBlob } from '../../lib/assemble/exportDocx';
 import { collectOptionalBlocks, blockTitles } from '../../lib/assemble/optionalBlocks';
 import { renderDocument } from '../../lib/assemble/render';
 import { sampleMsa } from '../../lib/assemble/templates/sampleMsa';
 import type { DealState } from '../../lib/assemble/types';
+import { DiffWorkspace } from '../DiffWorkspace';
 import { AssembleToolbar } from './AssembleToolbar';
 import { ClauseLibrary } from './ClauseLibrary';
 import { DocumentPreview } from './DocumentPreview';
@@ -44,8 +46,13 @@ export function AssembleView() {
       },
   );
   const [loadError, setLoadError] = useState<string>();
+  const [mode, setMode] = useState<'draft' | 'deviation'>('draft');
 
   const rendered = useMemo(() => renderDocument(template, deal), [template, deal]);
+  const deviation = useMemo(
+    () => (mode === 'deviation' ? deviationDiff(template, deal) : undefined),
+    [mode, template, deal],
+  );
   const optionalBlocks = useMemo(() => collectOptionalBlocks(template.blocks), [template.blocks]);
   const titles = useMemo(() => blockTitles(template.blocks), [template.blocks]);
   const issueCount = rendered.warnings.missingFields.length + rendered.warnings.brokenRefs.length;
@@ -102,33 +109,44 @@ export function AssembleView() {
       <AssembleToolbar
         templateName={template.name}
         issueCount={issueCount}
+        mode={mode}
+        onModeChange={setMode}
         onExport={() => void handleExport()}
         onSave={handleSave}
         onLoad={(file) => void handleLoad(file)}
         loadError={loadError}
       />
-      <div className="flex min-h-0 flex-1">
-        <TermSheet
-          fields={template.fields}
-          values={deal.fieldValues}
-          missingFieldIds={rendered.warnings.missingFields}
-          onChange={(fieldId, value) =>
-            setDeal((previous) => ({
-              ...previous,
-              fieldValues: { ...previous.fieldValues, [fieldId]: value },
-            }))
-          }
+      {mode === 'deviation' && deviation ? (
+        <DiffWorkspace
+          diff={deviation}
+          leftName="Base template"
+          rightName="This deal"
+          identicalNote="This deal makes no clause elections beyond the base template."
         />
-        <DocumentPreview doc={rendered} title={template.name} />
-        <ClauseLibrary
-          optionalBlocks={optionalBlocks}
-          included={deal.included}
-          warnings={rendered.warnings}
-          titles={titles}
-          fields={template.fields}
-          onToggle={handleToggle}
-        />
-      </div>
+      ) : (
+        <div className="flex min-h-0 flex-1">
+          <TermSheet
+            fields={template.fields}
+            values={deal.fieldValues}
+            missingFieldIds={rendered.warnings.missingFields}
+            onChange={(fieldId, value) =>
+              setDeal((previous) => ({
+                ...previous,
+                fieldValues: { ...previous.fieldValues, [fieldId]: value },
+              }))
+            }
+          />
+          <DocumentPreview doc={rendered} title={template.name} />
+          <ClauseLibrary
+            optionalBlocks={optionalBlocks}
+            included={deal.included}
+            warnings={rendered.warnings}
+            titles={titles}
+            fields={template.fields}
+            onToggle={handleToggle}
+          />
+        </div>
+      )}
     </div>
   );
 }
