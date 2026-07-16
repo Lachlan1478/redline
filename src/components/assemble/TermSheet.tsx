@@ -1,4 +1,5 @@
 import type { FieldDef } from '../../lib/assemble/types';
+import { SidePanel } from './SidePanel';
 
 const TYPE_HINTS: Record<FieldDef['type'], string> = {
   party: 'e.g. Alpha Bank plc',
@@ -21,21 +22,28 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
   const missing = new Set(missingFieldIds);
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-r border-desk-line/60 bg-desk">
-      <div className="border-b border-desk-line/60 px-4 pb-3 pt-4">
-        <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-desk-muted">
-          Term sheet
-        </h2>
-        <p className="mt-2 font-mono text-sm text-desk-text" data-testid="termsheet-progress">
+    <SidePanel
+      side="left"
+      title="Term sheet"
+      badge={`${filled}/${required.length}`}
+      badgeAttention={filled < required.length}
+      subtitle={
+        <p className="mt-1 font-mono text-xs text-desk-text" data-testid="termsheet-progress">
           {filled} of {required.length} required terms filled
         </p>
-      </div>
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      }
+      footer={
+        <p className="border-t border-desk-line/60 px-4 py-2 text-[10px] leading-snug text-desk-muted">
+          Terms populate the document as you type — nothing leaves your browser.
+        </p>
+      }
+    >
+      <div className="px-4 py-2.5">
         {fields.map((fieldDef) => {
           const isMissing = missing.has(fieldDef.id);
           return (
-            <label key={fieldDef.id} className="mb-3 block">
-              <span className="mb-1 flex items-baseline gap-1 font-mono text-[11px] uppercase tracking-[0.1em] text-desk-muted">
+            <label key={fieldDef.id} className="mb-2 block">
+              <span className="mb-0.5 flex items-baseline gap-1 font-mono text-[10px] uppercase tracking-[0.1em] text-desk-muted">
                 {fieldDef.label}
                 {fieldDef.required && (
                   <span className={isMissing ? 'text-highlighter' : 'text-desk-muted'}>*</span>
@@ -46,7 +54,7 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
                 value={values[fieldDef.id] ?? ''}
                 placeholder={TYPE_HINTS[fieldDef.type]}
                 onChange={(event) => onChange(fieldDef.id, event.target.value)}
-                className={`w-full rounded-sm border bg-desk-deep px-2.5 py-1.5 text-[13px] text-desk-text placeholder:text-desk-muted/60 ${
+                className={`w-full rounded-sm border bg-desk-deep px-2 py-1 text-[13px] text-desk-text placeholder:text-desk-muted/60 ${
                   isMissing ? 'border-highlighter/70' : 'border-desk-line'
                 }`}
               />
@@ -54,10 +62,6 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
           );
         })}
       </div>
-      <p className="border-t border-desk-line/60 px-4 py-3 text-[11px] leading-snug text-desk-muted">
-        Terms populate the document as you type. Nothing is uploaded — deal terms stay in your
-        browser.
-      </p>
-    </aside>
+    </SidePanel>
   );
 }
