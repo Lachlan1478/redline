@@ -7,7 +7,9 @@ Built for the reality of deal work: circulars and agreements that run to 100+ pa
 iterate many times between counterparties, and change in only a handful of places each
 round.
 
-🎬 **[Watch the 90-second demo](docs/demo/redline-demo.webm)** · 🚀 **[Use it now](https://lachlan1478.github.io/redline/)** (nothing you load ever leaves your machine)
+![Redline demo: comparing two versions of a circular, then assembling a contract from a term sheet](docs/demo/redline-demo.gif)
+
+🎬 **[Full-quality video](docs/demo/redline-demo.webm)** · 🚀 **[Use it now](https://lachlan1478.github.io/redline/)** (nothing you load ever leaves your machine)
 
 ---
 
@@ -32,6 +34,8 @@ Other commands:
 npx vitest run                    # unit tests (diff + assembly engines)
 npm run build                     # type-check + production build
 node scripts/make-samples.mjs     # regenerate sample documents in e2e/fixtures/
+node scripts/record-demo.mjs      # re-record the demo video (after build)
+node scripts/make-demo-gif.mjs    # regenerate the README gif (needs ffmpeg)
 ```
 
 Sample documents to try immediately are in `e2e/fixtures/` — a fictional prudential
