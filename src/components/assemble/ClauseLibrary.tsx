@@ -34,19 +34,19 @@ export function ClauseLibrary({
       badge={`${activeCount}/${optionalBlocks.length}`}
       badgeAttention={warnings.brokenRefs.length > 0}
       subtitle={
-        <p className="mt-1 font-mono text-xs text-desk-text">
+        <p className="mt-1 text-xs text-ink">
           {activeCount} of {optionalBlocks.length} optional clauses in
         </p>
       }
       footer={
-        <div className="border-t border-desk-line/60 px-4 py-2.5" data-testid="warnings-panel">
-          <h3 className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-desk-muted">
+        <div className="border-t border-line px-4 py-2.5" data-testid="warnings-panel">
+          <h3 className="eyebrow">
             {issueCount === 0 ? 'No issues' : `${issueCount} issue${issueCount === 1 ? '' : 's'}`}
           </h3>
           {warnings.brokenRefs.length > 0 && (
             <ul className="mt-1.5 space-y-1">
               {warnings.brokenRefs.map((broken, i) => (
-                <li key={i} className="text-[11px] leading-snug text-removed-bg">
+                <li key={i} className="text-[11px] leading-snug text-signal">
                   Broken reference: “{titles.get(broken.fromId) ?? broken.fromId}” cites the
                   excluded clause “{titles.get(broken.targetId) ?? broken.targetId}”.
                 </li>
@@ -54,14 +54,14 @@ export function ClauseLibrary({
             </ul>
           )}
           {warnings.missingFields.length > 0 && (
-            <p className="mt-1.5 text-[11px] leading-snug text-highlighter/90">
+            <p className="mt-1.5 text-[11px] leading-snug text-caution">
               Unfilled terms: {warnings.missingFields.map(fieldLabel).join(', ')}.
             </p>
           )}
           {importNotes.length > 0 && (
             <ul className="mt-1.5 space-y-1">
               {importNotes.map((note, i) => (
-                <li key={i} className="text-[11px] leading-snug text-desk-muted">
+                <li key={i} className="text-[11px] leading-snug text-ink-soft">
                   Import: {note.message}
                 </li>
               ))}
@@ -74,12 +74,10 @@ export function ClauseLibrary({
         {optionalBlocks.map((block) => {
           const active = isIncluded(block, included);
           return (
-            <li key={block.id} className="border-b border-desk-line/30 px-4 py-2">
+            <li key={block.id} className="border-b border-line px-4 py-2">
               <div className="flex items-center gap-2">
                 <span
-                  className={`flex-1 font-serif text-[13px] leading-snug ${
-                    active ? 'text-desk-text' : 'text-desk-muted'
-                  }`}
+                  className={`flex-1 text-[13px] leading-snug ${active ? 'font-medium text-ink' : 'text-ink-soft'}`}
                 >
                   {block.title ?? block.id}
                 </span>
@@ -88,11 +86,7 @@ export function ClauseLibrary({
                   data-testid={`toggle-${block.id}`}
                   aria-pressed={active}
                   onClick={() => onToggle(block.id, !active)}
-                  className={`shrink-0 rounded-sm border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
-                    active
-                      ? 'border-added-edge/70 bg-added-bg/20 text-added-bg hover:bg-removed-bg/20'
-                      : 'border-desk-line text-desk-muted hover:border-desk-text/60 hover:text-desk-text'
-                  }`}
+                  className="btn shrink-0 px-2 py-0.5 text-xs"
                 >
                   {active ? 'Remove' : 'Add'}
                 </button>

@@ -37,16 +37,13 @@ export function AssembleToolbar({
   const dealInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const buttonClass =
-    'rounded-sm border border-desk-line px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-desk-text hover:border-desk-text/60 hover:bg-desk-deep';
-
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-desk-line/60 bg-desk-deep px-5 py-2">
+    <div className="flex flex-wrap items-center gap-3 border-b border-line bg-card px-4 py-2">
       <select
         value={activeTemplateId}
         onChange={(event) => onTemplateChange(event.target.value)}
         aria-label="Active template"
-        className="max-w-64 truncate rounded-sm border border-desk-line bg-desk px-2 py-1 font-serif text-sm italic text-desk-text"
+        className="max-w-64 truncate rounded-md border border-line bg-card px-2 py-1 text-sm font-medium text-ink"
       >
         {templates.map((t) => (
           <option key={t.id} value={t.id}>
@@ -55,16 +52,16 @@ export function AssembleToolbar({
         ))}
       </select>
       {issueCount > 0 && (
-        <span className="rounded-sm bg-highlighter/20 px-2 py-0.5 font-mono text-[11px] text-highlighter">
+        <span className="rounded-full bg-caution/10 px-2.5 py-0.5 font-mono text-xs text-caution">
           {issueCount} open issue{issueCount === 1 ? '' : 's'}
         </span>
       )}
-      {error && <span className="max-w-96 truncate text-xs text-removed-bg">{error}</span>}
+      {error && <span className="max-w-96 truncate text-xs text-signal">{error}</span>}
       <div className="ml-auto flex items-center gap-2">
         <button
           type="button"
           data-testid="import-contract"
-          className={buttonClass}
+          className="btn"
           disabled={importing}
           onClick={() => importInputRef.current?.click()}
         >
@@ -75,25 +72,21 @@ export function AssembleToolbar({
           data-testid="toggle-deviation"
           aria-pressed={mode === 'deviation'}
           onClick={() => onModeChange(mode === 'deviation' ? 'draft' : 'deviation')}
-          className={`rounded-sm border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] ${
-            mode === 'deviation'
-              ? 'border-stamp bg-stamp/20 text-removed-bg'
-              : 'border-desk-line text-desk-text hover:border-desk-text/60 hover:bg-desk-deep'
-          }`}
+          className="btn"
         >
           {mode === 'deviation' ? 'Back to draft' : 'Redline vs base'}
         </button>
-        <button type="button" className={buttonClass} onClick={() => dealInputRef.current?.click()}>
+        <button type="button" className="btn" onClick={() => dealInputRef.current?.click()}>
           Load deal
         </button>
-        <button type="button" className={buttonClass} onClick={onSave}>
+        <button type="button" className="btn" onClick={onSave}>
           Save deal
         </button>
         <button
           type="button"
           data-testid="export-docx"
           onClick={onExport}
-          className="rounded-sm border border-highlighter/70 bg-highlighter/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-highlighter hover:bg-highlighter/20"
+          className="btn btn-primary"
         >
           Export .docx
         </button>

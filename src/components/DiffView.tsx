@@ -41,13 +41,13 @@ export function DiffView({ diff, originalName, changeName, activeHunk }: DiffVie
       ));
 
   return (
-    <div data-testid="diff-view" className="bg-paper pb-16">
-      <div className="sticky top-0 z-10 grid grid-cols-2 border-b-2 border-double border-ink/70 bg-paper/95 backdrop-blur-sm">
-        <div className="truncate border-r border-rule/70 px-7 py-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink-muted">
-          Original <span className="normal-case tracking-normal">— {originalName}</span>
+    <div data-testid="diff-view" className="bg-card pb-16">
+      <div className="sticky top-0 z-10 grid grid-cols-2 border-b border-line bg-card/95 backdrop-blur-sm">
+        <div className="eyebrow truncate border-r border-line px-7 py-2.5">
+          Original <span className="ml-1 font-mono font-normal normal-case tracking-normal">{originalName}</span>
         </div>
-        <div className="truncate px-7 py-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink-muted">
-          Change <span className="normal-case tracking-normal">— {changeName}</span>
+        <div className="eyebrow truncate px-7 py-2.5">
+          Change <span className="ml-1 font-mono font-normal normal-case tracking-normal">{changeName}</span>
         </div>
       </div>
       {blocks.map((block) =>
@@ -58,7 +58,7 @@ export function DiffView({ diff, originalName, changeName, activeHunk }: DiffVie
             key={`collapsed-${block.start}`}
             type="button"
             onClick={() => setExpanded(new Set([...expanded, block.start]))}
-            className="block w-full border-y border-rule bg-paper-shade px-4 py-1.5 text-center font-mono text-[11px] tracking-[0.08em] text-ink-muted hover:bg-rule/60"
+            className="block w-full border-y border-line bg-page px-4 py-1.5 text-center font-mono text-xs text-ink-soft hover:bg-line/60"
           >
             —&ensp;{block.end - block.start + 1} unchanged paragraphs · expand&ensp;—
           </button>

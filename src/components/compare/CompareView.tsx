@@ -71,7 +71,7 @@ export function CompareView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex gap-3 border-b border-desk-line/60 bg-desk-deep px-5 py-2.5">
+      <div className="flex gap-3 border-b border-line bg-card px-4 py-2.5">
         <div className="flex min-w-0 max-w-3xl flex-1 gap-3">
           <FileDropzone
             label="Original"
@@ -97,14 +97,12 @@ export function CompareView() {
           />
         ) : (
           <main className="flex flex-1 items-center justify-center p-8">
-            <div className="max-w-md border-2 border-double border-ink/60 bg-paper p-10 text-center shadow-[0_18px_40px_-18px_rgb(0_0_0/0.55)]">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-muted">
-                For review
-              </p>
-              <h2 className="mb-4 mt-2 font-serif text-2xl font-semibold text-ink">
+            <div className="max-w-md rounded-lg border border-line bg-card p-8">
+              <p className="eyebrow">For review</p>
+              <h2 className="mb-3 mt-1 font-display text-xl font-bold text-ink">
                 Compare two documents
               </h2>
-              <p className="mb-5 font-serif text-[15px] leading-relaxed text-ink">
+              <p className="mb-4 text-[15px] leading-relaxed text-ink">
                 Load an <strong>Original</strong> and a <strong>Change</strong> document above.
                 Additions are marked in{' '}
                 <span className="rounded-[2px] bg-added-bg px-1 text-added-ink">green</span>,
@@ -114,8 +112,8 @@ export function CompareView() {
                 </span>
                 , and unchanged sections fold away so you review only what changed.
               </p>
-              <p className="text-xs text-ink-muted">
-                Supports .docx and .pdf. Documents are processed entirely in your browser — nothing
+              <p className="text-xs text-ink-soft">
+                Supports .docx, .pdf and .txt. Documents are processed entirely in your browser — nothing
                 is uploaded to any server.
               </p>
             </div>

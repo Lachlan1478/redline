@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { amendmentSummary } from '../lib/diff/summary';
 import type { ChangeHunk } from '../lib/diff/types';
 
@@ -21,23 +21,26 @@ export function ChangeSidebar({
   const current = activeHunk ?? 0;
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   const handleCopySummary = async () => {
     try {
       await navigator.clipboard.writeText(amendmentSummary(hunks, leftName, rightName));
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard unavailable — leave the button state unchanged.
     }
   };
   return (
-    <aside className="hidden w-72 shrink-0 flex-col border-r border-desk-line/60 bg-desk md:flex">
-      <div className="border-b border-desk-line/60 px-4 pb-3 pt-4">
-        <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-desk-muted">
-          Index of amendments
-        </h2>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="flex-1 font-mono text-sm text-desk-text" data-testid="change-counter">
+    <aside className="flex shrink-0 flex-col border-b border-line bg-page md:w-72 md:border-b-0 md:border-r">
+      <div className="flex items-center gap-3 px-4 py-2 md:block md:border-b md:border-line md:pb-3 md:pt-4">
+        <h2 className="eyebrow hidden md:block">Index of amendments</h2>
+        <div className="flex flex-1 items-center gap-2 md:mt-2">
+          <span className="flex-1 font-mono text-sm text-ink" data-testid="change-counter">
             {hunks.length === 0 ? 'No changes' : `Change ${current + 1} of ${hunks.length}`}
           </span>
           <button
@@ -45,7 +48,7 @@ export function ChangeSidebar({
             aria-label="Previous change"
             disabled={hunks.length === 0 || current === 0}
             onClick={() => onSelect(current - 1)}
-            className="h-7 w-7 rounded-sm border border-desk-line font-mono text-sm text-desk-text hover:bg-desk-deep disabled:opacity-35"
+            className="btn h-7 w-7 p-0"
           >
             ↑
           </button>
@@ -54,13 +57,13 @@ export function ChangeSidebar({
             aria-label="Next change"
             disabled={hunks.length === 0 || current >= hunks.length - 1}
             onClick={() => onSelect(current + 1)}
-            className="h-7 w-7 rounded-sm border border-desk-line font-mono text-sm text-desk-text hover:bg-desk-deep disabled:opacity-35"
+            className="btn h-7 w-7 p-0"
           >
             ↓
           </button>
         </div>
       </div>
-      <ol className="flex-1 overflow-y-auto py-1">
+      <ol className="hidden flex-1 overflow-y-auto py-1 md:block">
         {hunks.map((hunk) => {
           const active = hunk.index === activeHunk;
           return (
@@ -70,23 +73,20 @@ export function ChangeSidebar({
                 onClick={() => onSelect(hunk.index)}
                 className={`block w-full px-4 py-2.5 text-left ${
                   active
-                    ? 'bg-desk-deep shadow-[inset_3px_0_0_var(--color-stamp)]'
-                    : 'hover:bg-desk-deep/60'
+                    ? 'bg-card shadow-[inset_3px_0_0_var(--color-dawn)]'
+                    : 'hover:bg-hover'
                 }`}
               >
-                <span className="flex items-baseline gap-1 font-mono text-[11px] tracking-wide text-desk-muted">
-                  <span className={active ? 'text-highlighter' : ''}>
+                <span className="flex items-baseline justify-between font-mono text-[11px] text-ink-soft">
+                  <span className={active ? 'font-medium text-dawn' : ''}>
                     Amdt {String(hunk.index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="flex-1 overflow-hidden whitespace-nowrap text-desk-line">
-                    ································
                   </span>
                   <span>
                     ¶ {hunk.rowStart + 1}
                     {hunk.rowEnd > hunk.rowStart ? `–${hunk.rowEnd + 1}` : ''}
                   </span>
                 </span>
-                <span className="mt-1 block truncate font-serif text-[13px] italic leading-snug text-desk-text">
+                <span className="mt-0.5 block truncate text-[13px] leading-snug text-ink">
                   {hunk.summary}
                 </span>
               </button>
@@ -94,17 +94,17 @@ export function ChangeSidebar({
           );
         })}
       </ol>
-      <div className="border-t border-desk-line/60 px-4 py-3">
+      <div className="px-4 pb-2 md:border-t md:border-line md:py-3">
         <button
           type="button"
           data-testid="copy-summary"
           onClick={() => void handleCopySummary()}
           disabled={hunks.length === 0}
-          className="mb-2 w-full rounded-sm border border-desk-line px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-desk-text hover:border-desk-text/60 hover:bg-desk-deep disabled:opacity-40"
+          className="btn w-full md:mb-2"
         >
           {copied ? 'Copied ✓' : 'Copy amendment summary'}
         </button>
-        <p className="text-[11px] leading-snug text-desk-muted">
+        <p className="hidden text-[11px] leading-snug text-ink-soft md:block">
           Documents are parsed and compared entirely in your browser — nothing is uploaded.
         </p>
       </div>

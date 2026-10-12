@@ -9,7 +9,7 @@ function SegmentSpan({ segment }: { segment: ParagraphSegment }) {
         <span className="rounded-[2px] bg-highlighter px-0.5 font-medium">{segment.text}</span>
       );
     case 'ref':
-      return <span className="underline decoration-ink-muted/50 decoration-dotted">{segment.text}</span>;
+      return <span className="underline decoration-ink-soft/50 decoration-dotted">{segment.text}</span>;
     case 'ref-broken':
       return (
         <span className="rounded-[2px] bg-removed-bg px-0.5 font-medium text-removed-ink">
@@ -33,12 +33,12 @@ interface DocumentPreviewProps {
 
 export function DocumentPreview({ doc, title }: DocumentPreviewProps) {
   return (
-    <main className="min-w-0 flex-1 overflow-y-auto bg-paper" data-testid="assemble-preview">
+    <main className="min-w-0 flex-1 overflow-y-auto bg-card" data-testid="assemble-preview">
       <div className="mx-auto max-w-3xl px-10 py-10">
-        <h2 className="mb-1 text-center font-serif text-xl font-bold tracking-wide text-ink">
+        <h2 className="mb-1 text-center font-serif text-xl font-bold text-ink">
           {title}
         </h2>
-        <p className="mb-8 border-b-2 border-double border-ink/60 pb-3 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-ink-muted">
+        <p className="eyebrow mb-8 border-b border-line pb-3 text-center">
           Live draft — for review
         </p>
         {doc.paragraphs.map((paragraph) => (

@@ -13,29 +13,27 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('compare');
 
   return (
-    <div className="flex h-full flex-col bg-desk">
-      <header className="flex items-center gap-6 border-b border-desk-line/60 bg-desk-deep px-5 py-3">
-        <h1 className="font-serif text-xl font-bold tracking-[0.08em] text-paper">
-          R<span className="text-[0.85em]">EDLINE</span>
-        </h1>
-        <nav className="flex gap-1" aria-label="Workspaces">
+    <div className="flex h-full flex-col bg-page">
+      <header className="flex h-12 shrink-0 items-center gap-6 border-b border-line bg-page px-4">
+        <h1 className="font-display text-sm font-bold text-ink">Redline</h1>
+        <nav className="flex gap-5 text-sm font-medium" aria-label="Workspaces">
           {TABS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               aria-current={tab === id ? 'page' : undefined}
-              className={`rounded-sm px-3 py-1.5 font-mono text-[12px] uppercase tracking-[0.14em] transition-colors ${
+              className={`border-b-2 pb-1 transition-colors ${
                 tab === id
-                  ? 'bg-desk text-highlighter shadow-[inset_0_-2px_0_var(--color-highlighter)]'
-                  : 'text-desk-muted hover:text-desk-text'
+                  ? 'border-dawn text-dawn'
+                  : 'border-transparent text-ink-soft hover:text-ink'
               }`}
             >
               {label}
             </button>
           ))}
         </nav>
-        <span className="ml-auto hidden font-sans text-[11px] text-desk-muted lg:inline">
+        <span className="ml-auto hidden font-mono text-xs text-ink-soft lg:inline">
           documents never leave your browser
         </span>
       </header>

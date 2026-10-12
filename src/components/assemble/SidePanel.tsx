@@ -35,25 +35,25 @@ export function SidePanel({
 
   if (collapsed) {
     return (
-      <aside className={`flex w-9 shrink-0 flex-col items-center bg-desk ${borderSide} border-desk-line/60`}>
+      <aside className={`flex w-9 shrink-0 flex-col items-center bg-page ${borderSide} border-line`}>
         <button
           type="button"
           onClick={() => setCollapsed(false)}
           aria-label={`Expand ${title}`}
           aria-expanded={false}
-          className="flex h-full w-full flex-col items-center gap-3 pt-3 text-desk-muted hover:bg-desk-deep hover:text-desk-text"
+          className="flex h-full w-full flex-col items-center gap-3 pt-3 text-ink-soft hover:bg-hover hover:text-ink"
         >
           <span aria-hidden className="font-mono text-sm">{expandChevron}</span>
           {badge && (
             <span
-              className={`rounded-sm px-0.5 font-mono text-[10px] ${
-                badgeAttention ? 'bg-highlighter/20 text-highlighter' : 'text-desk-muted'
+              className={`rounded px-0.5 font-mono text-[10px] ${
+                badgeAttention ? 'bg-caution/10 text-caution' : 'text-ink-soft'
               }`}
             >
               {badge}
             </span>
           )}
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] [writing-mode:vertical-rl]">
+          <span className="eyebrow text-[11px] [writing-mode:vertical-rl]">
             {title}
           </span>
         </button>
@@ -63,16 +63,16 @@ export function SidePanel({
 
   return (
     <aside
-      className={`flex w-72 shrink-0 flex-col bg-desk ${borderSide} border-desk-line/60`}
+      className={`flex w-72 shrink-0 flex-col bg-page ${borderSide} border-line`}
     >
-      <div className="flex items-start gap-2 border-b border-desk-line/60 px-4 pb-2.5 pt-3">
+      <div className="flex items-start gap-2 border-b border-line px-4 pb-2.5 pt-3">
         <div className="min-w-0 flex-1">
-          <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-desk-muted">
+          <h2 className="eyebrow">
             {title}
             {badge && (
               <span
-                className={`ml-2 rounded-sm px-1 font-mono text-[10px] normal-case tracking-normal ${
-                  badgeAttention ? 'bg-highlighter/20 text-highlighter' : 'text-desk-text'
+                className={`ml-2 rounded px-1 font-mono text-[11px] font-normal normal-case tracking-normal ${
+                  badgeAttention ? 'bg-caution/10 text-caution' : 'text-ink'
                 }`}
               >
                 {badge}
@@ -86,7 +86,7 @@ export function SidePanel({
           onClick={() => setCollapsed(true)}
           aria-label={`Collapse ${title}`}
           aria-expanded
-          className="rounded-sm px-1.5 py-0.5 font-mono text-sm text-desk-muted hover:bg-desk-deep hover:text-desk-text"
+          className="rounded px-1.5 py-0.5 font-mono text-sm text-ink-soft hover:bg-hover hover:text-ink"
         >
           {collapseChevron}
         </button>

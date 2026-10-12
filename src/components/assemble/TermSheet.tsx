@@ -28,12 +28,12 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
       badge={`${filled}/${required.length}`}
       badgeAttention={filled < required.length}
       subtitle={
-        <p className="mt-1 font-mono text-xs text-desk-text" data-testid="termsheet-progress">
+        <p className="mt-1 text-xs text-ink" data-testid="termsheet-progress">
           {filled} of {required.length} required terms filled
         </p>
       }
       footer={
-        <p className="border-t border-desk-line/60 px-4 py-2 text-[10px] leading-snug text-desk-muted">
+        <p className="border-t border-line px-4 py-2 text-[11px] leading-snug text-ink-soft">
           Terms populate the document as you type — nothing leaves your browser.
         </p>
       }
@@ -43,10 +43,10 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
           const isMissing = missing.has(fieldDef.id);
           return (
             <label key={fieldDef.id} className="mb-2 block">
-              <span className="mb-0.5 flex items-baseline gap-1 font-mono text-[10px] uppercase tracking-[0.1em] text-desk-muted">
+              <span className="mb-0.5 flex items-baseline gap-1 text-xs font-medium text-ink-soft">
                 {fieldDef.label}
                 {fieldDef.required && (
-                  <span className={isMissing ? 'text-highlighter' : 'text-desk-muted'}>*</span>
+                  <span className={isMissing ? 'text-caution' : 'text-ink-soft'}>*</span>
                 )}
               </span>
               <input
@@ -54,8 +54,8 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
                 value={values[fieldDef.id] ?? ''}
                 placeholder={TYPE_HINTS[fieldDef.type]}
                 onChange={(event) => onChange(fieldDef.id, event.target.value)}
-                className={`w-full rounded-sm border bg-desk-deep px-2 py-1 text-[13px] text-desk-text placeholder:text-desk-muted/60 ${
-                  isMissing ? 'border-highlighter/70' : 'border-desk-line'
+                className={`w-full rounded-md border bg-card px-2 py-1 text-[13px] text-ink placeholder:text-ink-soft/60 ${
+                  isMissing ? 'border-caution/50' : 'border-line'
                 }`}
               />
             </label>

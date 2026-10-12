@@ -27,7 +27,8 @@ function downloadBlob(blob: Blob, filename: string) {
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
-  URL.revokeObjectURL(url);
+  // Safari and Firefox cancel the download if the URL is revoked in the same task.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function freshDeal(templateId: string): DealState {
@@ -57,6 +58,18 @@ export function AssembleView() {
   const [error, setError] = useState<string>();
   const [mode, setMode] = useState<'draft' | 'deviation'>('draft');
   const [selection, setSelection] = useState<PendingSelection>();
+
+  useEffect(() => {
+    if (!selection) return;
+    const dismiss = () => setSelection(undefined);
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && dismiss();
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('scroll', dismiss, true);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('scroll', dismiss, true);
+    };
+  }, [selection]);
 
   const activeImport = imports.find((entry) => entry.template.id === activeId);
   const template = activeImport?.template ?? sampleMsa;
@@ -250,7 +263,7 @@ export function AssembleView() {
               data-testid="make-field"
               onClick={handleMakeField}
               style={{ position: 'fixed', left: selection.x + 8, top: selection.y + 12 }}
-              className="z-20 rounded-sm border border-highlighter bg-desk-deep px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-highlighter shadow-lg"
+              className="btn btn-primary z-20 shadow-md"
             >
               Make “{selection.text.length > 24 ? `${selection.text.slice(0, 24)}…` : selection.text}” a
               field
