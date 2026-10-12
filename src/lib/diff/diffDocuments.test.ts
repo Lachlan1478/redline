@@ -122,7 +122,10 @@ describe('diffDocuments', () => {
       ['5. Party B is fully liable for all loss.'],
     );
     expect(hunks[0].summary).toBe('cl 5: "A" → "B"; "not" → "fully"; "any" → "all"');
-    const many = diffDocuments(['7. a b c d e f g h'], ['7. a X c Y e Z g W']);
+    const many = diffDocuments(
+      ['7. The seller must pay within ten days after the buyer gives written notice of any claim.'],
+      ['7. The vendor must pay within five days after the purchaser gives written notice of every claim.'],
+    );
     expect(many.hunks[0].summary).toMatch(/; \+1 more$/);
   });
 });

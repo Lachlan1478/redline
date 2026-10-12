@@ -1,6 +1,6 @@
 import { alignParagraphs } from './align';
 import { diffParagraph, wordEdits } from './wordDiff';
-import type { ChangeHunk, DiffRow, DocumentDiff, Segment } from './types';
+import type { ChangeHunk, DiffRow, DocumentDiff, Segment, WordEdit } from './types';
 
 const EDIT_MAX_LENGTH = 40;
 const PARAGRAPH_MAX_LENGTH = 80;
@@ -30,14 +30,21 @@ function clip(text: string, max: number): string {
   return flat.length <= max ? flat : `${flat.slice(0, max).trimEnd()}…`;
 }
 
-function describeRow(row: DiffRow): string[] {
-  if (row.type === 'added') return [`Added "${clip(rowText(row), PARAGRAPH_MAX_LENGTH)}"`];
-  if (row.type === 'removed') return [`Deleted "${clip(rowText(row), PARAGRAPH_MAX_LENGTH)}"`];
-  return wordEdits(segmentsText(row.left), segmentsText(row.right)).map(({ removed, added }) => {
-    if (!added) return `deleted "${clip(removed, EDIT_MAX_LENGTH)}"`;
-    if (!removed) return `inserted "${clip(added, EDIT_MAX_LENGTH)}"`;
-    return `"${clip(removed, EDIT_MAX_LENGTH)}" → "${clip(added, EDIT_MAX_LENGTH)}"`;
-  });
+function rowEdits(row: DiffRow): WordEdit[] {
+  if (row.type === 'added') return [{ removed: '', added: rowText(row), paragraph: true }];
+  if (row.type === 'removed') return [{ removed: rowText(row), added: '', paragraph: true }];
+  return wordEdits(segmentsText(row.left), segmentsText(row.right));
+}
+
+export function describeEdit({ removed, added, paragraph }: WordEdit): string {
+  if (paragraph) {
+    return added
+      ? `Added "${clip(added, PARAGRAPH_MAX_LENGTH)}"`
+      : `Deleted "${clip(removed, PARAGRAPH_MAX_LENGTH)}"`;
+  }
+  if (!added) return `deleted "${clip(removed, EDIT_MAX_LENGTH)}"`;
+  if (!removed) return `inserted "${clip(added, EDIT_MAX_LENGTH)}"`;
+  return `"${clip(removed, EDIT_MAX_LENGTH)}" → "${clip(added, EDIT_MAX_LENGTH)}"`;
 }
 
 /** Clause reference for a hunk: the nearest heading at or above its first row, plus any sub-paragraph. */
@@ -51,12 +58,10 @@ function hunkLocation(rows: DiffRow[], start: number): string | undefined {
   return undefined;
 }
 
-function summarize(rows: DiffRow[], start: number, end: number): string {
-  const edits = rows.slice(start, end + 1).flatMap(describeRow);
-  const shown = edits.slice(0, MAX_EDITS_SHOWN).join('; ');
+function summarize(clause: string | undefined, edits: WordEdit[]): string {
+  const shown = edits.slice(0, MAX_EDITS_SHOWN).map(describeEdit).join('; ');
   const more = edits.length > MAX_EDITS_SHOWN ? `; +${edits.length - MAX_EDITS_SHOWN} more` : '';
-  const location = hunkLocation(rows, start);
-  return `${location ? `${location}: ` : ''}${shown}${more}`;
+  return `${clause ? `${clause}: ` : ''}${shown}${more}`;
 }
 
 /** Groups contiguous changed rows into hunks, never letting one hunk span two numbered clauses. */
@@ -67,7 +72,9 @@ function buildHunks(rows: DiffRow[]): ChangeHunk[] {
     if (start === -1) return;
     const index = hunks.length;
     for (let i = start; i <= end; i++) rows[i].hunkIndex = index;
-    hunks.push({ index, rowStart: start, rowEnd: end, summary: summarize(rows, start, end) });
+    const clause = hunkLocation(rows, start);
+    const edits = rows.slice(start, end + 1).flatMap(rowEdits);
+    hunks.push({ index, rowStart: start, rowEnd: end, clause, edits, summary: summarize(clause, edits) });
     start = -1;
   };
   rows.forEach((row, i) => {
