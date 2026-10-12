@@ -1,3 +1,5 @@
+import type { Flag } from './materiality';
+
 /** A run of text inside one paragraph cell. */
 export type SegmentType = 'unchanged' | 'added' | 'removed';
 
@@ -36,6 +38,8 @@ export interface ChangeHunk {
   /** Clause reference, e.g. "cl 11(a)" or "Schedule 1", when the document is numbered. */
   clause?: string;
   edits: WordEdit[];
+  /** Figure, obligation-word and risk-term flags for triage. */
+  flags: Flag[];
   /** Clause reference and the changed words, e.g. `cl 5: "five" → "three"`. */
   summary: string;
 }

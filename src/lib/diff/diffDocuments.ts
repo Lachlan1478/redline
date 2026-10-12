@@ -1,4 +1,6 @@
+import { headingLabel } from '../clauses';
 import { alignParagraphs } from './align';
+import { materialityFlags } from './materiality';
 import { diffParagraph, wordEdits } from './wordDiff';
 import type { ChangeHunk, DiffRow, DocumentDiff, Segment, WordEdit } from './types';
 
@@ -6,8 +8,6 @@ const EDIT_MAX_LENGTH = 40;
 const PARAGRAPH_MAX_LENGTH = 80;
 const MAX_EDITS_SHOWN = 3;
 
-const CLAUSE_HEADING = /^\s*(?:clause\s+)?(\d+[A-Z]?(?:\.\d+)+\.?|\d+[A-Z]?\.)(?=\s|$)/i;
-const SCHEDULE_HEADING = /^\s*((?:schedule|annexure|appendix|part)\s+[\dA-Z]+)\b/i;
 const SUB_PARAGRAPH = /^\s*(\([a-z0-9]+\))/i;
 
 function segmentsText(segments: Segment[] | undefined): string {
@@ -16,13 +16,6 @@ function segmentsText(segments: Segment[] | undefined): string {
 
 function rowText(row: DiffRow): string {
   return segmentsText(row.right) || segmentsText(row.left);
-}
-
-/** "cl 12" or "Schedule 1" when the paragraph opens a numbered clause. */
-function headingLabel(text: string): string | undefined {
-  const clause = CLAUSE_HEADING.exec(text);
-  if (clause) return `cl ${clause[1].replace(/\.$/, '')}`;
-  return SCHEDULE_HEADING.exec(text)?.[1];
 }
 
 function clip(text: string, max: number): string {
@@ -64,7 +57,7 @@ function summarize(clause: string | undefined, edits: WordEdit[]): string {
   return `${clause ? `${clause}: ` : ''}${shown}${more}`;
 }
 
-/** Groups contiguous changed rows into hunks, never letting one hunk span two numbered clauses. */
+/** Groups contiguous changed rows into hunks, never letting one hunk span two numbered clauses or sub-paragraphs. */
 function buildHunks(rows: DiffRow[]): ChangeHunk[] {
   const hunks: ChangeHunk[] = [];
   let start = -1;
@@ -74,7 +67,15 @@ function buildHunks(rows: DiffRow[]): ChangeHunk[] {
     for (let i = start; i <= end; i++) rows[i].hunkIndex = index;
     const clause = hunkLocation(rows, start);
     const edits = rows.slice(start, end + 1).flatMap(rowEdits);
-    hunks.push({ index, rowStart: start, rowEnd: end, clause, edits, summary: summarize(clause, edits) });
+    hunks.push({
+      index,
+      rowStart: start,
+      rowEnd: end,
+      clause,
+      edits,
+      flags: materialityFlags(edits),
+      summary: summarize(clause, edits),
+    });
     start = -1;
   };
   rows.forEach((row, i) => {
@@ -82,7 +83,8 @@ function buildHunks(rows: DiffRow[]): ChangeHunk[] {
       closeHunk(i - 1);
       return;
     }
-    if (start !== -1 && headingLabel(rowText(row))) closeHunk(i - 1);
+    const text = rowText(row);
+    if (start !== -1 && (headingLabel(text) || SUB_PARAGRAPH.test(text))) closeHunk(i - 1);
     if (start === -1) start = i;
   });
   closeHunk(rows.length - 1);
