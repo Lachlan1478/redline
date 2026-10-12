@@ -10,6 +10,15 @@ export interface ImportedContract {
   notes: ImportNote[];
 }
 
+const TITLE_MAX_LENGTH = 80;
+
+/** The agreement's own title from its opening line, e.g. "SHARE SALE AGREEMENT — …" → "SHARE SALE AGREEMENT". */
+export function documentTitle(paragraphs: string[]): string | undefined {
+  const head = paragraphs[0]?.split(/\s[—–-]\s|\.\s/)[0].trim();
+  if (!head || head.length > TITLE_MAX_LENGTH || /^(\d|\()/.test(head) || !/[a-z]/i.test(head)) return undefined;
+  return head;
+}
+
 const REF_PATTERN = /\b(Clause|Section|Condition|Article|Paragraph)s?\s+(\d+(?:\.\d+)*(?:\([a-z0-9]{1,4}\))*)/g;
 
 /**
@@ -19,7 +28,8 @@ const REF_PATTERN = /\b(Clause|Section|Condition|Article|Paragraph)s?\s+(\d+(?:\
  * future renumbering. Fields are not auto-created — marking deal-specific
  * values is a review-the-cut step.
  */
-export function importContract(paragraphs: string[], name: string): ImportedContract {
+export function importContract(paragraphs: string[], fallbackName: string): ImportedContract {
+  const name = documentTitle(paragraphs) ?? fallbackName;
   const { blocks, numbering, notes } = parseStructure(paragraphs);
   const labels = computeNumbering(blocks, {}, numbering);
   const idByLabel = new Map<string, string>();

@@ -29,7 +29,9 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
       badgeAttention={filled < required.length}
       subtitle={
         <p className="mt-1 text-xs text-ink" data-testid="termsheet-progress">
-          {filled} of {required.length} required terms filled
+          {fields.length === 0
+            ? 'No fields detected — select text in the draft to mark one'
+            : `${filled} of ${required.length} required terms filled`}
         </p>
       }
       footer={

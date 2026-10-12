@@ -217,6 +217,7 @@ export function AssembleView() {
         }}
         issueCount={issueCount}
         mode={mode}
+        deviationAvailable={optionalBlocks.length > 0}
         onModeChange={setMode}
         onImport={(file) => void handleImport(file)}
         onExport={() => void handleExport()}

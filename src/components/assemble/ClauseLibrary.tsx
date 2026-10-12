@@ -26,6 +26,12 @@ export function ClauseLibrary({
   const activeCount = optionalBlocks.filter((b) => isIncluded(b, included)).length;
   const issueCount =
     warnings.brokenRefs.length + warnings.missingFields.length + importNotes.length;
+  const analysed = fields.length > 0 || optionalBlocks.length > 0;
+  const issueHeading = !analysed
+    ? 'Not analysed'
+    : issueCount === 0
+      ? 'No unfilled terms or broken references'
+      : `${issueCount} issue${issueCount === 1 ? '' : 's'}`;
 
   return (
     <SidePanel
@@ -35,14 +41,22 @@ export function ClauseLibrary({
       badgeAttention={warnings.brokenRefs.length > 0}
       subtitle={
         <p className="mt-1 text-xs text-ink">
-          {activeCount} of {optionalBlocks.length} optional clauses in
+          {optionalBlocks.length === 0
+            ? 'No optional clauses detected'
+            : `${activeCount} of ${optionalBlocks.length} optional clauses in`}
         </p>
       }
       footer={
         <div className="border-t border-line px-4 py-2.5" data-testid="warnings-panel">
           <h3 className="eyebrow">
-            {issueCount === 0 ? 'No issues' : `${issueCount} issue${issueCount === 1 ? '' : 's'}`}
+            {issueHeading}
           </h3>
+          {!analysed && (
+            <p className="mt-1.5 text-[11px] leading-snug text-ink-soft">
+              No fields or optional clauses were found in this contract, so nothing has been
+              checked. Select text in the draft to mark a field.
+            </p>
+          )}
           {warnings.brokenRefs.length > 0 && (
             <ul className="mt-1.5 space-y-1">
               {warnings.brokenRefs.map((broken, i) => (

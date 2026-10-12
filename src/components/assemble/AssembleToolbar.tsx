@@ -11,6 +11,8 @@ interface AssembleToolbarProps {
   onTemplateChange: (id: string) => void;
   issueCount: number;
   mode: 'draft' | 'deviation';
+  /** False when the template has no optional clauses, so a deal cannot deviate from it. */
+  deviationAvailable: boolean;
   onModeChange: (mode: 'draft' | 'deviation') => void;
   onImport: (file: File) => void;
   onExport: () => void;
@@ -26,6 +28,7 @@ export function AssembleToolbar({
   onTemplateChange,
   issueCount,
   mode,
+  deviationAvailable,
   onModeChange,
   onImport,
   onExport,
@@ -71,6 +74,8 @@ export function AssembleToolbar({
           type="button"
           data-testid="toggle-deviation"
           aria-pressed={mode === 'deviation'}
+          disabled={!deviationAvailable}
+          title={deviationAvailable ? undefined : 'This contract has no optional clauses to compare against the base'}
           onClick={() => onModeChange(mode === 'deviation' ? 'draft' : 'deviation')}
           className="btn"
         >

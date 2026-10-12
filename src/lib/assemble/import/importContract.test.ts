@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { importContract } from './index';
+import { documentTitle, importContract } from './index';
 import { renderDocument } from '../render';
 import { sampleMsa } from '../templates/sampleMsa';
 import type { DealState } from '../types';
@@ -54,5 +54,21 @@ describe('importContract — round trip with the sample agreement', () => {
       (p) => p.text,
     );
     expect(roundTripped).toEqual(source);
+  });
+});
+
+describe('documentTitle', () => {
+  it("takes the agreement's own title from its opening line", () => {
+    expect(documentTitle(['SHARE SALE AGREEMENT — Corran Holdings Pty Ltd (Seller) and others.'])).toBe(
+      'SHARE SALE AGREEMENT',
+    );
+    expect(documentTitle(['Master Services Agreement', '1. Definitions.'])).toBe('Master Services Agreement');
+  });
+
+  it('declines numbered or overlong opening lines', () => {
+    expect(documentTitle(['1. Definitions. In this agreement…'])).toBeUndefined();
+    expect(documentTitle(['(a) the Buyer must pay'])).toBeUndefined();
+    expect(documentTitle(['x'.repeat(120)])).toBeUndefined();
+    expect(documentTitle([])).toBeUndefined();
   });
 });
