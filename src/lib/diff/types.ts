@@ -25,7 +25,7 @@ export interface ChangeHunk {
   rowStart: number;
   /** Inclusive end row. */
   rowEnd: number;
-  /** Short excerpt used as a label in the sidebar. */
+  /** Clause reference and the changed words, e.g. `cl 5: "five" → "three"`. */
   summary: string;
 }
 

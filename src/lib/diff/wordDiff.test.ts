@@ -36,4 +36,13 @@ describe('diffParagraph', () => {
     expect(left.some((s) => s.type === 'removed' && s.text.includes('promptly'))).toBe(true);
     expect(right.every((s) => s.type !== 'removed')).toBe(true);
   });
+
+  it('joins a rewritten phrase into one removed run and one added run', () => {
+    const { left, right } = diffParagraph(
+      'Interest accrues to the Escrow Amount and follows the principal.',
+      'Interest accrues to the Seller for its benefit.',
+    );
+    expect(left.filter((s) => s.type === 'removed')).toHaveLength(1);
+    expect(right.filter((s) => s.type === 'added')).toHaveLength(1);
+  });
 });

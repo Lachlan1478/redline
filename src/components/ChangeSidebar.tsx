@@ -86,7 +86,7 @@ export function ChangeSidebar({
                     {hunk.rowEnd > hunk.rowStart ? `–${hunk.rowEnd + 1}` : ''}
                   </span>
                 </span>
-                <span className="mt-0.5 block truncate text-[13px] leading-snug text-ink">
+                <span className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-ink">
                   {hunk.summary}
                 </span>
               </button>
