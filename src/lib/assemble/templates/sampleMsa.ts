@@ -77,6 +77,11 @@ export const sampleMsa: ContractTemplate = {
         field('gov_law'),
         text('.'),
       ]),
+      sub('def-calc-agent', [text('"Calculation Agent" means '), field('calc_agent'), text('.')]),
+      sub('def-initial-price', [text('"Initial Price" means '), field('initial_price'), text('.')]),
+      sub('def-floating-amount', [
+        text('"Floating Amount" means the amount payable by Party B under Clause 3(b).'),
+      ]),
       sub('def-equity-amount', [
         text('"Equity Amount" means, for each payment date, the Notional Amount multiplied by the percentage change in the level of the Underlying from the Initial Price (or the previous Valuation Time) to the current Valuation Time, as determined by the Calculation Agent.'),
       ]),
@@ -92,9 +97,7 @@ export const sampleMsa: ContractTemplate = {
     ]),
     clause('payments', 'Payments', [text('The Parties shall make the following payments:')], [
       sub('pay-equity', [
-        text('Party A shall pay the Equity Amount, determined by reference to the performance of the Underlying from the Initial Price of '),
-        field('initial_price'),
-        text('.'),
+        text('Party A shall pay the Equity Amount, determined by reference to the performance of the Underlying from the Initial Price.'),
       ]),
       sub('pay-floating', [
         text('Party B shall pay the Floating Amount at '),
@@ -113,9 +116,7 @@ export const sampleMsa: ContractTemplate = {
       text('.'),
     ]),
     clause('adjustments', 'Adjustments', [
-      text('The Calculation Agent, being '),
-      field('calc_agent'),
-      text(', shall determine adjustments for corporate actions affecting the Underlying in a commercially reasonable manner.'),
+      text('The Calculation Agent shall determine adjustments for corporate actions affecting the Underlying in a commercially reasonable manner.'),
     ]),
     clause('taxes', 'Taxes', [
       text('Each Party shall make payments free of withholding unless required by law.'),

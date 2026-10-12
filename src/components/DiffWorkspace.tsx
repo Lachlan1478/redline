@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { clauseKey } from '../lib/clauses';
 import { exportRedlineBlob } from '../lib/diff/exportRedline';
-import { revertedClauses } from '../lib/diff/history';
+import { revertedHunks } from '../lib/diff/history';
 import type { DocumentDiff, Segment } from '../lib/diff/types';
 import { downloadBlob } from '../lib/download';
 import { draftingChecks } from '../lib/drafting';
@@ -39,16 +38,7 @@ export function DiffWorkspace({ diff, leftName, rightName, identicalNote, banner
   const reverted = useMemo(() => {
     if (!earlier) return new Set<number>();
     const original = diff.rows.filter((r) => r.left).map((r) => joined(r.left));
-    const clauses = revertedClauses(earlier, original, changeParagraphs);
-    return new Set(
-      diff.hunks
-        .filter((h) => {
-          if (!h.clause) return false;
-          const { top, sub } = clauseKey(h.clause);
-          return clauses.has(`${top}${sub?.toLowerCase() ?? ''}`);
-        })
-        .map((h) => h.index),
-    );
+    return revertedHunks(diff.hunks, earlier, original, changeParagraphs);
   }, [diff, earlier, changeParagraphs]);
 
   const handleExportRedline = async () => {
