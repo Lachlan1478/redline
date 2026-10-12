@@ -43,14 +43,29 @@ standard (`long-original` / `long-change`, ~15 pages, 5 planted changes) in both
 ### Compare — read the redline, not the document
 
 Load an **Original** and a **Change** version of a document (.docx, .pdf, .txt, or
-pasted text). You get a side-by-side redline: additions in green, deletions struck
+pasted text), and optionally an **Earlier** draft. You get a side-by-side redline: additions in green, deletions struck
 out in red, and long unchanged stretches folded away so a 100-page document reads
 as its five real changes.
 
-- **Index of amendments** — every change listed with prev/next navigation; click to jump.
+- **Index of amendments**: one entry per clause or sub-paragraph, labelled with the
+  words that changed (`cl 11(a): "three" → "five"`), with prev/next navigation.
+  Each entry is tagged **Figure**, **Obligation** (may/must/not/only…) or **Risk term**;
+  **Flagged only** filters to those, and **Figures changed** lists every changed number.
+- **Check cover note**: paste the other side's cover email, or your own before
+  sending. Each amendment is marked *not in cover note*, *edit not described* or
+  *only partly described*, edit by edit. This is how a change slipped in under
+  "no other changes" gets caught.
+- **Earlier draft** (optional): flags amendments that put back an earlier draft's
+  wording, e.g. a point "accepted" last round and quietly reverted in this one.
+- **Drafting checks** on the Change draft: possibly undefined terms, unused
+  definitions, and references to clauses that don't exist or are marked deleted.
+- **Export tracked changes (.docx)**: the Change draft as a Word document whose
+  differences are real tracked changes the recipient can accept or reject.
 - **Margin rail** — a whole-document overview strip with one tick per change.
 - **Copy amendment summary** — one click produces the numbered plain-text list of
   changes, ready to paste into a cover email.
+- Heavily rewritten passages show as one deletion and one insertion rather than
+  word-by-word fragments.
 - PDF parsing automatically strips repeated page headers/footers, watermarks and page
   numbers so pagination shifts don't show up as false changes. Footnotes in .docx
   files are included in the comparison (they're where changes hide).
@@ -63,7 +78,8 @@ document recomputing instantly. No more hand-fixing "subject to Clause 9(b)" aft
 inserting a clause.
 
 - **Term sheet** (left panel): the deal's fields — parties, dates, amounts. Type once,
-  populates everywhere. Unfilled required terms glow yellow as `[● Party A]`.
+  populates everywhere. Unfilled required terms glow yellow as `[● Party A]`. Dates,
+  amounts and numbers are checked as you type, and dates must fall in order.
 - **Clause library** (right panel): optional clauses with one-click Add/Remove.
   Adding a clause renumbers everything after it and updates every reference to match.
 - **Import contract**: drop in *your own* .docx/.pdf/.txt and Redline cuts it into
@@ -72,6 +88,8 @@ inserting a clause.
   **"Make … a field"** to templatise it everywhere it appears.
 - **Redline vs base**: one click shows what this deal changed relative to the
   template — a reviewer reads the deviations, not the whole contract.
+- **Issues panel**: unfilled terms, broken references, and the same drafting checks
+  as Compare (undefined terms, references to missing or deleted clauses).
 - **Export .docx** with the computed numbering baked in; export is gated so unfilled
   terms can't silently reach an execution copy. **Save/Load deal** keeps the whole
   setup as a local JSON file; work also autosaves in your browser.
