@@ -10,6 +10,8 @@ import { sampleMsa } from '../../lib/assemble/templates/sampleMsa';
 import { loadImportedTemplates, saveImportedTemplate } from '../../lib/assemble/templateStore';
 import type { StoredImport } from '../../lib/assemble/templateStore';
 import type { ContractTemplate, DealState } from '../../lib/assemble/types';
+import { downloadBlob } from '../../lib/download';
+import { draftingChecks } from '../../lib/drafting';
 import { parseFile, ParseError } from '../../lib/parse';
 import { DiffWorkspace } from '../DiffWorkspace';
 import { AssembleToolbar } from './AssembleToolbar';
@@ -19,16 +21,6 @@ import { TermSheet } from './TermSheet';
 
 function autosaveKey(templateId: string): string {
   return `redline-deal-${templateId}`;
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  // Safari and Firefox cancel the download if the URL is revoked in the same task.
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function freshDeal(templateId: string): DealState {
@@ -93,7 +85,9 @@ export function AssembleView() {
   const optionalBlocks = useMemo(() => collectOptionalBlocks(template.blocks), [template.blocks]);
   const titles = useMemo(() => blockTitles(template.blocks), [template.blocks]);
   const importNotes = activeImport?.notes ?? [];
+  const draftingNotes = useMemo(() => draftingChecks(rendered.paragraphs.map((p) => p.text)), [rendered]);
   const issueCount =
+    draftingNotes.length +
     rendered.warnings.missingFields.length +
     rendered.warnings.brokenRefs.length +
     importNotes.length;
@@ -256,6 +250,7 @@ export function AssembleView() {
             titles={titles}
             fields={template.fields}
             importNotes={importNotes}
+            draftingNotes={draftingNotes}
             onToggle={handleToggle}
           />
           {selection && (

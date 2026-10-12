@@ -1,5 +1,6 @@
 import { isIncluded } from '../../lib/assemble/numbering';
 import type { ImportNote } from '../../lib/assemble/import';
+import type { DraftingNote } from '../../lib/drafting';
 import type { Block, FieldDef, RenderWarnings } from '../../lib/assemble/types';
 import { SidePanel } from './SidePanel';
 
@@ -10,6 +11,7 @@ interface ClauseLibraryProps {
   titles: Map<string, string>;
   fields: FieldDef[];
   importNotes?: ImportNote[];
+  draftingNotes: DraftingNote[];
   onToggle: (blockId: string, include: boolean) => void;
 }
 
@@ -20,18 +22,15 @@ export function ClauseLibrary({
   titles,
   fields,
   importNotes = [],
+  draftingNotes,
   onToggle,
 }: ClauseLibraryProps) {
   const fieldLabel = (id: string) => fields.find((f) => f.id === id)?.label ?? id;
   const activeCount = optionalBlocks.filter((b) => isIncluded(b, included)).length;
   const issueCount =
-    warnings.brokenRefs.length + warnings.missingFields.length + importNotes.length;
+    warnings.brokenRefs.length + warnings.missingFields.length + importNotes.length + draftingNotes.length;
   const analysed = fields.length > 0 || optionalBlocks.length > 0;
-  const issueHeading = !analysed
-    ? 'Not analysed'
-    : issueCount === 0
-      ? 'No unfilled terms or broken references'
-      : `${issueCount} issue${issueCount === 1 ? '' : 's'}`;
+  const issueHeading = issueCount === 0 ? 'No issues found' : `${issueCount} issue${issueCount === 1 ? '' : 's'}`;
 
   return (
     <SidePanel
@@ -51,11 +50,19 @@ export function ClauseLibrary({
           <h3 className="eyebrow">
             {issueHeading}
           </h3>
-          {!analysed && (
-            <p className="mt-1.5 text-[11px] leading-snug text-ink-soft">
-              No fields or optional clauses were found in this contract, so nothing has been
-              checked. Select text in the draft to mark a field.
-            </p>
+          <p className="mt-1 text-[11px] leading-snug text-ink-soft">
+            {analysed
+              ? 'Checked: unfilled terms, clause references, defined terms.'
+              : 'Checked: clause references and defined terms only — no fields or optional clauses were detected. Select text in the draft to mark a field.'}
+          </p>
+          {draftingNotes.length > 0 && (
+            <ul className="mt-1.5 space-y-1">
+              {draftingNotes.map((note, i) => (
+                <li key={i} className="text-[11px] leading-snug text-caution">
+                  {note.message}
+                </li>
+              ))}
+            </ul>
           )}
           {warnings.brokenRefs.length > 0 && (
             <ul className="mt-1.5 space-y-1">

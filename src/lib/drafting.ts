@@ -6,15 +6,16 @@ export interface DraftingNote {
 }
 
 const MAX_LISTED = 12;
-const TERM = String.raw`[A-Z][A-Za-z-]+(?:\s+[A-Z][A-Za-z-]+){0,3}`;
+const TERM = String.raw`[A-Z][A-Za-z-]+(?:\s+(?:of\s+|and\s+|for\s+)?[A-Z][A-Za-z-]+){0,3}`;
 const QUOTED_DEFINITION = new RegExp(String.raw`"(${TERM})"\s+(?:means|includes|has the meaning)|\((?:the\s+)?"(${TERM})"\)`, 'g');
-const BARE_DEFINITION = new RegExp(String.raw`\((${TERM})\)`, 'g');
+const BARE_DEFINITION = new RegExp(String.raw`\((${TERM})\)|"(${TERM})"`, 'g');
 const DEFINITE_USE = new RegExp(String.raw`\b(?:[Tt]he|[Aa]n?|[Aa]ny|[Ee]ach|[Ee]very|[Ss]uch|[Nn]o|[Aa]ll|[Tt]hat)\s+(${TERM})`, 'g');
 const NOT_TERMS = /\b(?:Act|Acts|Regulations?|Code|Ltd|Limited|Pty|plc|Inc|LLC|LP|Bank|Court|Courts|Commission|Office|Exchange|Government|Commonwealth|Crown|January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Australia|Australian|Victoria|Queensland|Wales|England|English|Clause|Clauses|Schedule|Schedules|Annexure|Appendix|Part)\b/;
 const CLAUSE_REF = /\b(?:[Cc]lauses?|cl\.?)\s+(\d+[A-Z]?)(?:\.\d+)*(?:\([a-z0-9]+\))*(?:\s*(?:to|–|-)\s*(\d+))?/g;
 const DELETED_BODY = /^\s*\d+[A-Z]?\.\s*(?:[^.]{0,60}\.\s*)?\[?\s*(?:not used|intentionally (?:left blank|deleted)|deleted|reserved)\s*\.?\]?\s*$/i;
 
-const singular = (term: string) => term.replace(/s$/, '');
+const singular = (term: string) => term.replace(/ies$/, 'y').replace(/s$/, '');
+const ACRONYM = /^[A-Z]{2,5}$/;
 const normalise = (text: string) => text.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
 
 function listed(kind: DraftingNote['kind'], label: string, items: string[]): DraftingNote[] {
@@ -37,14 +38,14 @@ export function draftingChecks(paragraphs: string[]): DraftingNote[] {
   const quoted = new Set<string>();
   for (const m of all.matchAll(QUOTED_DEFINITION)) quoted.add(m[1] ?? m[2]);
   const defined = new Set(quoted);
-  for (const m of all.matchAll(BARE_DEFINITION)) defined.add(m[1]);
+  for (const m of all.matchAll(BARE_DEFINITION)) defined.add(m[1] ?? m[2]);
   const isDefined = (term: string) =>
     [...defined].some((d) => singular(d) === singular(term) || term.startsWith(`${d} `));
 
   const undefinedTerms = new Set<string>();
   for (const m of all.matchAll(DEFINITE_USE)) {
     const term = m[1];
-    if (!NOT_TERMS.test(term) && !isDefined(term)) undefinedTerms.add(term);
+    if (!NOT_TERMS.test(term) && !ACRONYM.test(term) && !isDefined(term)) undefinedTerms.add(term);
   }
 
   const unused = [...quoted].filter((term) => {

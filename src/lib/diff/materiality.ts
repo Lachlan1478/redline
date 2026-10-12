@@ -26,8 +26,15 @@ export function figureTokens(text: string): string[] {
 
 const editText = (edit: WordEdit) => `${edit.removed} ${edit.added}`;
 
+/** Clause numbers are references, not figures. */
+export function withoutClauseNumbers(text: string): string {
+  return text
+    .replace(/\b(?:clauses?|cll?\.?|sections?|paragraphs?|schedule|annexure)\s*\d[\w().–-]*/gi, ' ')
+    .replace(/^\s*\d+[A-Z]?(?:\.\d+)*\.?\s/, ' ');
+}
+
 export function isFigureEdit(edit: WordEdit): boolean {
-  return FIGURE.test(edit.removed) || FIGURE.test(edit.added);
+  return FIGURE.test(withoutClauseNumbers(edit.removed)) || FIGURE.test(withoutClauseNumbers(edit.added));
 }
 
 /** What kind of change this is, so a lawyer can triage: figures, obligation words, risk terms. */

@@ -5,7 +5,8 @@ describe('clauseTexts', () => {
   it('collects each clause with its sub-paragraphs', () => {
     expect(clauseTexts(['Preamble.', '3. Payments.', '(a) Party A pays.', '4. Taxes.'])).toEqual(
       new Map([
-        ['3', '3. Payments. (a) Party A pays.'],
+        ['3', '3. Payments.'],
+        ['3(a)', '(a) Party A pays.'],
         ['4', '4. Taxes.'],
       ]),
     );

@@ -8,11 +8,13 @@ interface FileDropzoneProps {
   loading: boolean;
   error?: string;
   onFile: (file: File) => void;
+  /** Status text shown before a document is loaded. */
+  emptyHint?: string;
   /** Called with clipboard text when the user chooses to paste a document. */
   onPasteText?: (text: string) => void;
 }
 
-export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }: FileDropzoneProps) {
+export function FileDropzone({ label, doc, loading, error, emptyHint, onFile, onPasteText }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [pasteError, setPasteError] = useState<string>();
@@ -42,7 +44,7 @@ export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }
     ? 'Reading…'
     : doc
       ? `${doc.name} · ${doc.paragraphs.length} ¶`
-      : 'Drop .docx, .pdf or .txt — click to browse';
+      : (emptyHint ?? 'Drop .docx, .pdf or .txt — click to browse');
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">

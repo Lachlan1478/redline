@@ -1,9 +1,17 @@
 import { clauseKey } from '../clauses';
-import { figureTokens, isFigureEdit } from './materiality';
-import type { ChangeHunk } from './types';
+import { figureTokens, withoutClauseNumbers } from './materiality';
+import type { ChangeHunk, WordEdit } from './types';
 
-/** Whether a cover note accounts for an amendment. */
-export type CoverStatus = 'mentioned' | 'figure-missing' | 'not-mentioned';
+/** How well a cover note accounts for an amendment, from worst to best. */
+export type CoverStatus = 'not-mentioned' | 'undescribed-edit' | 'partly-described' | 'mentioned';
+
+export interface CoverCheck {
+  status: CoverStatus;
+  /** Edits the note doesn't describe (or describes only one side of). */
+  gaps: WordEdit[];
+}
+
+type Coverage = 'none' | 'partial' | 'full';
 
 interface Ref {
   top: string;
@@ -16,7 +24,11 @@ const CLAUSE_REFS = new RegExp(
   'gi',
 );
 const SCHEDULE_REFS = /\b(?:schedule|sch\.?|annexure|appendix)\s*(\d+|[A-Z])\b/gi;
-const STOPWORDS = new Set(['that', 'this', 'with', 'from', 'have', 'such', 'shall', 'which', 'their', 'party', 'parties', 'agreement']);
+const STOPWORDS = new Set(
+  'that this with from have such shall must will which their there where party parties agreement clause clauses under other than been each into upon being when were what they them then also does only more most some same very'.split(' '),
+);
+/** Words this common in the document can't show that a note describes a particular edit. */
+const COMMON_IN_DOCUMENT = 6;
 
 function parseItem(item: string): Ref {
   const match = /^(\d+[A-Z]?(?:\.\d+)*)((?:\([a-z0-9]+\))*)$/i.exec(item.trim());
@@ -42,7 +54,7 @@ export function coverNoteRefs(note: string): Ref[] {
   return refs;
 }
 
-function clauseMentioned(refs: Ref[], clause: string): boolean {
+function refersTo(refs: Ref[], clause: string): boolean {
   const key = clauseKey(clause);
   const sameClause = refs.filter((r) => r.top === key.top || key.top.startsWith(`${r.top}.`));
   if (sameClause.length === 0) return false;
@@ -50,33 +62,69 @@ function clauseMentioned(refs: Ref[], clause: string): boolean {
   return sameClause.some((r) => key.sub!.startsWith(r.sub!) || r.sub!.startsWith(key.sub!));
 }
 
-function wordsMentioned(note: string, hunk: ChangeHunk): boolean {
-  const lower = note.toLowerCase();
-  const words = hunk.edits.flatMap((e) => `${e.removed} ${e.added}`.toLowerCase().match(/[a-z]{4,}|\d[\d,.]*/g) ?? []);
-  return words.some((w) => !STOPWORDS.has(w) && lower.includes(w));
+/** The note lines that discuss a clause, plus any unnumbered lines that continue them. */
+function noteItem(lines: string[], clause: string): string {
+  const picked: string[] = [];
+  let following = false;
+  for (const line of lines) {
+    const refs = coverNoteRefs(line);
+    if (refs.length > 0) following = refersTo(refs, clause);
+    if (following) picked.push(line);
+  }
+  return picked.join('\n');
 }
 
-function figuresMentioned(note: string, hunk: ChangeHunk): boolean {
-  // Clause numbers are references, not figures: "Clause 5" must not vouch for a change to five days.
-  const noteFigures = new Set(figureTokens(note.replace(CLAUSE_REFS, ' ').replace(SCHEDULE_REFS, ' ')));
-  return hunk.edits.filter(isFigureEdit).every((edit) => {
-    const figures = figureTokens(edit.added).filter((f) => !figureTokens(edit.removed).includes(f));
-    const changed = figures.length > 0 ? figures : figureTokens(edit.removed);
-    return changed.length === 0 || changed.some((f) => noteFigures.has(f));
-  });
+function wordCounts(text: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const word of text.toLowerCase().match(/[a-z]{4,}/g) ?? []) counts.set(word, (counts.get(word) ?? 0) + 1);
+  return counts;
+}
+
+function distinctive(text: string, documentWords: Map<string, number>): string[] {
+  const words = (text.toLowerCase().match(/[a-z]{4,}/g) ?? []).filter(
+    (w) => !STOPWORDS.has(w) && (documentWords.get(w) ?? 0) <= COMMON_IN_DOCUMENT,
+  );
+  return [...words, ...figureTokens(withoutClauseNumbers(text))];
+}
+
+function coverage(edit: WordEdit, item: string, documentWords: Map<string, number>): Coverage {
+  const said = new Set([
+    ...(item.toLowerCase().match(/[a-z]{4,}/g) ?? []),
+    ...figureTokens(withoutClauseNumbers(item.replace(CLAUSE_REFS, ' ').replace(SCHEDULE_REFS, ' '))),
+  ]);
+  const removed = distinctive(edit.removed, documentWords);
+  const added = distinctive(edit.added, documentWords).filter((t) => !removed.includes(t));
+  const removedOnly = removed.filter((t) => !added.includes(t));
+  const hit = (side: string[]) => side.some((t) => said.has(t));
+  if (added.length === 0 && removedOnly.length === 0) return 'full';
+  if (!hit(added) && !hit(removedOnly)) return 'none';
+  // The new wording must be described; the old only when it held a figure ("five" in "five → three").
+  const oldFigure = figureTokens(withoutClauseNumbers(edit.removed)).length > 0;
+  const addedOk = added.length === 0 || hit(added);
+  const removedOk = removedOnly.length === 0 || !oldFigure || hit(removedOnly);
+  return addedOk && removedOk ? 'full' : 'partial';
 }
 
 /**
- * Checks each amendment against a cover note. An amendment is "not mentioned"
- * when the note never refers to its clause (or, for unnumbered text, to any
- * changed word), and "figure-missing" when the clause is referred to but a
- * changed number never appears in the note.
+ * Checks each amendment against a cover note, edit by edit, using what the
+ * note says about that clause:
+ * - "not-mentioned": the note never refers to the clause (or, if unnumbered,
+ *   to any changed word);
+ * - "undescribed-edit": some edit's old and new wording both go unmentioned;
+ * - "partly-described": the note gives only one side of some replacement,
+ *   e.g. the new figure but not the old.
  */
-export function checkCoverNote(hunks: ChangeHunk[], note: string): CoverStatus[] {
+export function checkCoverNote(hunks: ChangeHunk[], note: string, documentText = ''): CoverCheck[] {
   const refs = coverNoteRefs(note);
+  const lines = note.split(/\n+/);
+  const documentWords = wordCounts(documentText);
   return hunks.map((hunk) => {
-    const mentioned = hunk.clause ? clauseMentioned(refs, hunk.clause) : wordsMentioned(note, hunk);
-    if (!mentioned) return 'not-mentioned';
-    return figuresMentioned(note, hunk) ? 'mentioned' : 'figure-missing';
+    if (hunk.clause && !refersTo(refs, hunk.clause)) return { status: 'not-mentioned', gaps: hunk.edits };
+    const item = hunk.clause ? noteItem(lines, hunk.clause) : note;
+    const results = hunk.edits.map((edit) => coverage(edit, item, documentWords));
+    const gaps = hunk.edits.filter((_, i) => results[i] !== 'full');
+    if (!hunk.clause && results.every((r) => r === 'none')) return { status: 'not-mentioned', gaps };
+    const status = results.includes('none') ? 'undescribed-edit' : results.includes('partial') ? 'partly-described' : 'mentioned';
+    return { status, gaps };
   });
 }

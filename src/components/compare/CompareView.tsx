@@ -55,6 +55,7 @@ function useDocumentSlot(): DocumentSlot {
 }
 
 export function CompareView() {
+  const earlier = useDocumentSlot();
   const original = useDocumentSlot();
   const change = useDocumentSlot();
 
@@ -72,7 +73,13 @@ export function CompareView() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex gap-3 border-b border-line bg-card px-4 py-2.5">
-        <div className="flex min-w-0 max-w-3xl flex-1 gap-3">
+        <div className="flex min-w-0 max-w-5xl flex-1 gap-3">
+          <FileDropzone
+            label="Earlier"
+            {...earlier}
+            emptyHint="Optional — flags clauses reverted to it"
+            onFile={earlier.load}
+          />
           <FileDropzone
             label="Original"
             {...original}
@@ -93,6 +100,7 @@ export function CompareView() {
             diff={diff}
             leftName={original.doc.name}
             rightName={change.doc.name}
+            earlier={earlier.doc?.paragraphs}
             identicalNote="The documents are identical — no differences found."
           />
         ) : (

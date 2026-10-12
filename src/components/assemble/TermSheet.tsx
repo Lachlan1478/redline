@@ -1,3 +1,4 @@
+import { fieldProblems } from '../../lib/assemble/fieldValidation';
 import type { FieldDef } from '../../lib/assemble/types';
 import { SidePanel } from './SidePanel';
 
@@ -20,13 +21,14 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
   const required = fields.filter((f) => f.required);
   const filled = required.filter((f) => values[f.id]?.trim()).length;
   const missing = new Set(missingFieldIds);
+  const problems = fieldProblems(fields, values);
 
   return (
     <SidePanel
       side="left"
       title="Term sheet"
       badge={`${filled}/${required.length}`}
-      badgeAttention={filled < required.length}
+      badgeAttention={filled < required.length || problems.size > 0}
       subtitle={
         <p className="mt-1 text-xs text-ink" data-testid="termsheet-progress">
           {fields.length === 0
@@ -57,9 +59,12 @@ export function TermSheet({ fields, values, missingFieldIds, onChange }: TermShe
                 placeholder={TYPE_HINTS[fieldDef.type]}
                 onChange={(event) => onChange(fieldDef.id, event.target.value)}
                 className={`w-full rounded-md border bg-card px-2 py-1 text-[13px] text-ink placeholder:text-ink-soft/60 ${
-                  isMissing ? 'border-caution/50' : 'border-line'
+                  isMissing || problems.has(fieldDef.id) ? 'border-caution/50' : 'border-line'
                 }`}
               />
+              {problems.has(fieldDef.id) && (
+                <span className="mt-0.5 block text-[11px] text-caution">{problems.get(fieldDef.id)}</span>
+              )}
             </label>
           );
         })}

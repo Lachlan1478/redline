@@ -1,15 +1,20 @@
 import { clauseKey, headingLabel } from '../clauses';
 
+const SUB_PARAGRAPH = /^\s*(\([a-z0-9]+\))/i;
+
 const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 
-/** Full text of each top-level clause, keyed like clauseKey().top: a heading plus the paragraphs under it. */
+/** Text of each clause and sub-paragraph, keyed "11" or "11(a)", so a revert is spotted at the level it happened. */
 export function clauseTexts(paragraphs: string[]): Map<string, string> {
   const clauses = new Map<string, string>();
-  let current: string | undefined;
+  let heading: string | undefined;
+  let key: string | undefined;
   for (const paragraph of paragraphs) {
-    const heading = headingLabel(paragraph);
-    if (heading) current = clauseKey(heading).top.split('.')[0];
-    if (current) clauses.set(current, squash(`${clauses.get(current) ?? ''} ${paragraph}`));
+    const label = headingLabel(paragraph);
+    const sub = SUB_PARAGRAPH.exec(paragraph)?.[1];
+    if (label) key = heading = clauseKey(label).top;
+    else if (sub && heading) key = `${heading}${sub.toLowerCase()}`;
+    if (key) clauses.set(key, squash(`${clauses.get(key) ?? ''} ${paragraph}`));
   }
   return clauses;
 }
