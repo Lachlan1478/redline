@@ -54,7 +54,7 @@ function useDocumentSlot(): DocumentSlot {
   return { doc, loading, error, load, loadText };
 }
 
-export function CompareView() {
+export function CompareView({ onHowItWorks }: { onHowItWorks: () => void }) {
   const earlier = useDocumentSlot();
   const original = useDocumentSlot();
   const change = useDocumentSlot();
@@ -121,6 +121,9 @@ export function CompareView() {
                 , and unchanged sections fold away so you review only what changed.
               </p>
               <p className="text-xs text-ink-soft">
+                <button type="button" onClick={onHowItWorks} className="mb-2 block font-medium text-dawn underline">
+                  New here? See how it works
+                </button>
                 Supports .docx, .pdf and .txt. Documents are processed entirely in your browser — nothing
                 is uploaded to any server.
               </p>

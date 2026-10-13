@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { AssembleView } from './components/assemble/AssembleView';
 import { CompareView } from './components/compare/CompareView';
+import { HowItWorks } from './components/HowItWorks';
 
-type Tab = 'compare' | 'assemble';
+type Tab = 'compare' | 'assemble' | 'how';
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'compare', label: 'Compare' },
   { id: 'assemble', label: 'Assemble' },
+  { id: 'how', label: 'How it works' },
 ];
 
 export default function App() {
@@ -37,7 +39,9 @@ export default function App() {
           documents never leave your browser
         </span>
       </header>
-      {tab === 'compare' ? <CompareView /> : <AssembleView />}
+      {tab === 'compare' && <CompareView onHowItWorks={() => setTab('how')} />}
+      {tab === 'assemble' && <AssembleView />}
+      {tab === 'how' && <HowItWorks onStart={() => setTab('compare')} />}
     </div>
   );
 }
