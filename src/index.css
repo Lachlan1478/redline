@@ -2,44 +2,41 @@
 @import '@fontsource/literata/400-italic.css';
 @import '@fontsource/literata/600.css';
 @import '@fontsource/literata/700.css';
-@import '@fontsource/ibm-plex-sans/400.css';
-@import '@fontsource/ibm-plex-sans/500.css';
-@import '@fontsource/ibm-plex-sans/600.css';
-@import '@fontsource/ibm-plex-mono/400.css';
-@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/archivo/600.css';
+@import '@fontsource/archivo/700.css';
+@import '@fontsource/instrument-sans/400.css';
+@import '@fontsource/instrument-sans/500.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
 @import 'tailwindcss';
 
+/* Palette and type follow the LifeTracker dashboard (lifetracker/apps/web globals.css). */
 @theme {
-  /* The desk: banker's-lamp green, the surface everything sits on. */
-  --color-desk: #2f3a32;
-  --color-desk-deep: #27302a;
-  --color-desk-line: #46544a;
-  --color-desk-text: #cfd6c9;
-  --color-desk-muted: #8d9a8c;
+  --color-ink: #131a26;
+  --color-ink-soft: #5a6475;
+  --color-page: #f1f3f6;
+  --color-card: #ffffff;
+  --color-line: #dfe3e9;
+  --color-hover: color-mix(in srgb, #131a26 5%, transparent);
+  --color-dawn: #1b3f73;
+  /* 3.15:1 on white: borders and fills only, never text. */
+  --color-dawn-light: #7393c0;
+  --color-signal: #b42318;
+  --color-free: #4e7d5b;
+  --color-caution: #9a6700;
 
-  /* The paper: warm document white with near-black ink. */
-  --color-paper: #fbfaf4;
-  --color-paper-shade: #f1efe4;
-  --color-ink: #232720;
-  --color-ink-muted: #6f7466;
-  --color-rule: #ddd9c8;
+  --color-added-bg: #dcebd9;
+  --color-added-ink: #2c5636;
+  --color-added-edge: #4e7d5b;
+  --color-removed-bg: #f6d9d5;
+  --color-removed-ink: #8a1c12;
+  --color-removed-edge: #b42318;
+  --color-highlighter: #f8e7b5;
 
-  /* Redline marks. */
-  --color-added-bg: #dcefc8;
-  --color-added-ink: #295b24;
-  --color-added-edge: #4c8a3f;
-  --color-removed-bg: #f3d3ce;
-  --color-removed-ink: #7e2a20;
-  --color-removed-edge: #b0503f;
-
-  /* Highlighter for the active amendment; stamp red for index marks. */
-  --color-highlighter: #f5e6a8;
-  --color-highlighter-soft: #fbf3d0;
-  --color-stamp: #a63a2b;
-
+  --font-display: 'Archivo', Arial, Helvetica, sans-serif;
+  --font-sans: 'Instrument Sans', Arial, Helvetica, sans-serif;
   --font-serif: 'Literata', Georgia, 'Times New Roman', serif;
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 html,
@@ -50,13 +47,58 @@ body,
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-desk);
+  background: var(--color-page);
   color: var(--color-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-highlighter);
+  outline: 2px solid var(--color-dawn);
   outline-offset: 2px;
+}
+
+@layer components {
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    background: var(--color-card);
+    padding: 0.25rem 0.75rem;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--color-hover);
+  }
+  .btn:disabled {
+    opacity: 0.4;
+  }
+  .btn[aria-pressed='true'] {
+    border-color: var(--color-dawn);
+    color: var(--color-dawn);
+    background: color-mix(in srgb, var(--color-dawn) 8%, var(--color-card));
+  }
+  .btn-primary {
+    border-color: var(--color-dawn);
+    background: var(--color-dawn);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-dawn) 88%, #000);
+  }
 }
 
 /* Empty cell opposite an added paragraph (nothing existed here in the Original). */
@@ -64,7 +106,7 @@ body {
   background-image: repeating-linear-gradient(
     -45deg,
     transparent 0 6px,
-    rgb(221 217 200 / 0.55) 6px 8px
+    rgb(223 227 233 / 0.7) 6px 8px
   );
 }
 
@@ -72,15 +114,14 @@ body {
 .placeholder-stripes-removed {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgb(243 211 206 / 0.45) 0 6px,
-    rgb(176 80 63 / 0.25) 6px 8px
+    rgb(246 217 213 / 0.45) 0 6px,
+    rgb(180 35 24 / 0.18) 6px 8px
   );
 }
 
-/* Highlighter sweep when jumping to an amendment. */
-@keyframes highlighter-fade {
+@keyframes highlight-fade {
   from {
-    background-color: var(--color-highlighter);
+    background-color: color-mix(in srgb, var(--color-dawn-light) 30%, transparent);
   }
   to {
     background-color: transparent;
@@ -88,7 +129,7 @@ body {
 }
 
 .flash-highlight {
-  animation: highlighter-fade 1.6s ease-out 1;
+  animation: highlight-fade 1.6s ease-out 1;
 }
 
 @media (prefers-reduced-motion: reduce) {

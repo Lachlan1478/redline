@@ -8,11 +8,13 @@ interface FileDropzoneProps {
   loading: boolean;
   error?: string;
   onFile: (file: File) => void;
+  /** Status text shown before a document is loaded. */
+  emptyHint?: string;
   /** Called with clipboard text when the user chooses to paste a document. */
   onPasteText?: (text: string) => void;
 }
 
-export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }: FileDropzoneProps) {
+export function FileDropzone({ label, doc, loading, error, emptyHint, onFile, onPasteText }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [pasteError, setPasteError] = useState<string>();
@@ -42,7 +44,7 @@ export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }
     ? 'Reading…'
     : doc
       ? `${doc.name} · ${doc.paragraphs.length} ¶`
-      : 'Drop .docx, .pdf or .txt — click to browse';
+      : (emptyHint ?? 'Drop .docx, .pdf or .txt — click to browse');
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -57,23 +59,19 @@ export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
-          className={`flex min-w-0 flex-1 items-center gap-3 rounded-sm border border-dashed px-3 py-2 text-left transition-colors ${
-            dragging
-              ? 'border-highlighter bg-desk-deep'
-              : 'border-desk-line hover:border-desk-text/60 hover:bg-desk-deep/60'
+          className={`flex min-w-0 flex-1 items-center gap-3 rounded-md border border-dashed px-3 py-2 text-left transition-colors ${
+            dragging ? 'border-dawn bg-dawn/5' : 'border-line hover:border-dawn-light hover:bg-hover'
           }`}
         >
           <span
-            className={`shrink-0 rounded-[2px] border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] ${
-              label === 'Change'
-                ? 'border-highlighter/70 text-highlighter'
-                : 'border-desk-muted text-desk-text'
+            className={`eyebrow shrink-0 rounded px-1.5 py-0.5 text-[11px] ${
+              label === 'Change' ? 'bg-dawn text-white' : 'bg-page text-ink'
             }`}
           >
             {label}
           </span>
           <span
-            className={`truncate text-[13px] ${doc ? 'font-medium text-desk-text' : 'text-desk-muted'}`}
+            className={`truncate text-[13px] ${doc ? 'font-medium text-ink' : 'text-ink-soft'}`}
           >
             {status}
           </span>
@@ -84,13 +82,13 @@ export function FileDropzone({ label, doc, loading, error, onFile, onPasteText }
             aria-label={`Paste ${label} document from clipboard`}
             title="Paste document text from the clipboard"
             onClick={() => void handlePaste()}
-            className="shrink-0 rounded-sm border border-desk-line px-2 font-mono text-[10px] uppercase tracking-[0.1em] text-desk-muted hover:border-desk-text/60 hover:text-desk-text"
+            className="btn shrink-0"
           >
             Paste
           </button>
         )}
       </div>
-      {(error || pasteError) && <p className="text-xs text-removed-bg">{error ?? pasteError}</p>}
+      {(error || pasteError) && <p className="text-xs text-signal">{error ?? pasteError}</p>}
       <input
         ref={inputRef}
         type="file"

@@ -49,15 +49,15 @@ export function DiffRowView({ row, rowIndex, active }: DiffRowViewProps) {
     <div
       id={`row-${rowIndex}`}
       data-row-type={row.type}
-      className={`grid grid-cols-2 ${active ? 'flash-highlight shadow-[inset_0_0_0_2px_var(--color-highlighter)]' : ''}`}
+      className={`grid grid-cols-2 ${active ? 'flash-highlight shadow-[inset_0_0_0_2px_var(--color-dawn-light)]' : ''}`}
     >
       <Cell
         segments={row.left}
-        className={`border-r border-rule/70 shadow-[inset_-6px_0_8px_-8px_rgb(35_39_32/0.5)] ${LEFT_STYLES[row.type]}`}
+        className={`border-r border-line ${LEFT_STYLES[row.type]}`}
       />
       <Cell
         segments={row.right}
-        className={`shadow-[inset_6px_0_8px_-8px_rgb(35_39_32/0.5)] ${RIGHT_STYLES[row.type]}`}
+        className={RIGHT_STYLES[row.type]}
       />
     </div>
   );

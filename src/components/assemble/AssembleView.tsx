@@ -10,6 +10,8 @@ import { sampleMsa } from '../../lib/assemble/templates/sampleMsa';
 import { loadImportedTemplates, saveImportedTemplate } from '../../lib/assemble/templateStore';
 import type { StoredImport } from '../../lib/assemble/templateStore';
 import type { ContractTemplate, DealState } from '../../lib/assemble/types';
+import { downloadBlob } from '../../lib/download';
+import { draftingChecks } from '../../lib/drafting';
 import { parseFile, ParseError } from '../../lib/parse';
 import { DiffWorkspace } from '../DiffWorkspace';
 import { AssembleToolbar } from './AssembleToolbar';
@@ -19,15 +21,6 @@ import { TermSheet } from './TermSheet';
 
 function autosaveKey(templateId: string): string {
   return `redline-deal-${templateId}`;
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
 
 function freshDeal(templateId: string): DealState {
@@ -58,6 +51,18 @@ export function AssembleView() {
   const [mode, setMode] = useState<'draft' | 'deviation'>('draft');
   const [selection, setSelection] = useState<PendingSelection>();
 
+  useEffect(() => {
+    if (!selection) return;
+    const dismiss = () => setSelection(undefined);
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && dismiss();
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('scroll', dismiss, true);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('scroll', dismiss, true);
+    };
+  }, [selection]);
+
   const activeImport = imports.find((entry) => entry.template.id === activeId);
   const template = activeImport?.template ?? sampleMsa;
 
@@ -80,7 +85,9 @@ export function AssembleView() {
   const optionalBlocks = useMemo(() => collectOptionalBlocks(template.blocks), [template.blocks]);
   const titles = useMemo(() => blockTitles(template.blocks), [template.blocks]);
   const importNotes = activeImport?.notes ?? [];
+  const draftingNotes = useMemo(() => draftingChecks(rendered.paragraphs.map((p) => p.text)), [rendered]);
   const issueCount =
+    draftingNotes.length +
     rendered.warnings.missingFields.length +
     rendered.warnings.brokenRefs.length +
     importNotes.length;
@@ -204,6 +211,7 @@ export function AssembleView() {
         }}
         issueCount={issueCount}
         mode={mode}
+        deviationAvailable={optionalBlocks.length > 0}
         onModeChange={setMode}
         onImport={(file) => void handleImport(file)}
         onExport={() => void handleExport()}
@@ -242,6 +250,7 @@ export function AssembleView() {
             titles={titles}
             fields={template.fields}
             importNotes={importNotes}
+            draftingNotes={draftingNotes}
             onToggle={handleToggle}
           />
           {selection && (
@@ -250,7 +259,7 @@ export function AssembleView() {
               data-testid="make-field"
               onClick={handleMakeField}
               style={{ position: 'fixed', left: selection.x + 8, top: selection.y + 12 }}
-              className="z-20 rounded-sm border border-highlighter bg-desk-deep px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-highlighter shadow-lg"
+              className="btn btn-primary z-20 shadow-md"
             >
               Make “{selection.text.length > 24 ? `${selection.text.slice(0, 24)}…` : selection.text}” a
               field

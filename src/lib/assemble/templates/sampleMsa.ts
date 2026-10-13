@@ -25,7 +25,7 @@ const sub = (id: string, body: Inline[], extra: Partial<Block> = {}): Block => (
 
 export const sampleMsa: ContractTemplate = {
   id: 'sample-msa',
-  name: 'Master Equity Swap Agreement (Sample)',
+  name: 'Master Equity Swap Agreement',
   numbering: { levels: ['decimal', 'alpha', 'roman'], compose: 'parenthetical', refWord: 'Clause' },
   fields: [
     { id: 'party_a', label: 'Party A', type: 'party', required: true },
@@ -37,9 +37,9 @@ export const sampleMsa: ContractTemplate = {
     { id: 'notional', label: 'Notional Amount', type: 'currency', required: true },
     { id: 'initial_price', label: 'Initial Price', type: 'currency', required: true },
     { id: 'floating_rate', label: 'Floating Rate Option', type: 'text', required: true },
-    { id: 'spread', label: 'Spread', type: 'number', required: true },
+    { id: 'spread', label: 'Spread (basis points)', type: 'number', required: true },
     { id: 'calc_agent', label: 'Calculation Agent', type: 'party', required: true },
-    { id: 'gov_law', label: 'Governing Law', type: 'text', required: false },
+    { id: 'gov_law', label: 'Governing Law (jurisdiction)', type: 'text', required: false },
   ],
   blocks: [
     {
@@ -72,6 +72,19 @@ export const sampleMsa: ContractTemplate = {
       sub('def-valuation', [
         text('"Valuation Time" means the scheduled close of trading on the relevant exchange.'),
       ]),
+      sub('def-business-day', [
+        text('"Business Day" means a day (other than a Saturday, Sunday or public holiday) on which commercial banks are open for general business in '),
+        field('gov_law'),
+        text('.'),
+      ]),
+      sub('def-calc-agent', [text('"Calculation Agent" means '), field('calc_agent'), text('.')]),
+      sub('def-initial-price', [text('"Initial Price" means '), field('initial_price'), text('.')]),
+      sub('def-floating-amount', [
+        text('"Floating Amount" means the amount payable by Party B under Clause 3(b).'),
+      ]),
+      sub('def-equity-amount', [
+        text('"Equity Amount" means, for each payment date, the Notional Amount multiplied by the percentage change in the level of the Underlying from the Initial Price (or the previous Valuation Time) to the current Valuation Time, as determined by the Calculation Agent.'),
+      ]),
     ]),
     clause('term', 'Term', [
       text('This Agreement takes effect on '),
@@ -84,9 +97,7 @@ export const sampleMsa: ContractTemplate = {
     ]),
     clause('payments', 'Payments', [text('The Parties shall make the following payments:')], [
       sub('pay-equity', [
-        text('Party A shall pay the Equity Amount, determined by reference to the performance of the Underlying from the Initial Price of '),
-        field('initial_price'),
-        text('.'),
+        text('Party A shall pay the Equity Amount, determined by reference to the performance of the Underlying from the Initial Price.'),
       ]),
       sub('pay-floating', [
         text('Party B shall pay the Floating Amount at '),
@@ -105,9 +116,7 @@ export const sampleMsa: ContractTemplate = {
       text('.'),
     ]),
     clause('adjustments', 'Adjustments', [
-      text('The Calculation Agent, being '),
-      field('calc_agent'),
-      text(', shall determine adjustments for corporate actions affecting the Underlying in a commercially reasonable manner.'),
+      text('The Calculation Agent shall determine adjustments for corporate actions affecting the Underlying in a commercially reasonable manner.'),
     ]),
     clause('taxes', 'Taxes', [
       text('Each Party shall make payments free of withholding unless required by law.'),
@@ -120,7 +129,7 @@ export const sampleMsa: ContractTemplate = {
       text('.'),
     ], [], { optional: true }),
     clause('keyperson', 'Key Person', [
-      text('If any Key Person ceases to devote substantially all business time to the management of Party B, Party A may terminate under '),
+      text('If any Key Person (being each individual named as such in a Confirmation agreed by the Parties) ceases to devote substantially all business time to the management of Party B, Party A may terminate under '),
       ref('termination'),
       text(' on five Business Days’ notice.'),
     ], [], { optional: true }),
@@ -130,7 +139,7 @@ export const sampleMsa: ContractTemplate = {
       text('.'),
     ], [], { optional: true }),
     clause('etf', 'Early Termination Fee', [
-      text('If Party B designates an Early Termination Date other than following an Event of Default, Party B shall pay a fee equal to 0.25 per cent of the Notional Amount in addition to amounts due under '),
+      text('Party B may terminate this Agreement before its scheduled termination on ten Business Days’ notice to Party A. If Party B does so other than following an Event of Default, Party B shall pay a fee equal to 0.25 per cent of the Notional Amount in addition to amounts due under '),
       ref('termination'),
       text('.'),
     ], [], { optional: true }),
@@ -148,7 +157,7 @@ export const sampleMsa: ContractTemplate = {
       text('Notices shall be delivered in writing to the addresses specified by each Party and are effective on receipt.'),
     ]),
     clause('law', 'Governing Law', [
-      text('This Agreement is governed by '),
+      text('This Agreement is governed by the laws of '),
       field('gov_law'),
       text('.'),
     ]),

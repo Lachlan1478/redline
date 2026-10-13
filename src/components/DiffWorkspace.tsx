@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { DocumentDiff } from '../lib/diff/types';
+import { exportRedlineBlob } from '../lib/diff/exportRedline';
+import { revertedHunks } from '../lib/diff/history';
+import type { DocumentDiff, Segment } from '../lib/diff/types';
+import { downloadBlob } from '../lib/download';
+import { draftingChecks } from '../lib/drafting';
 import { AmendmentRail } from './AmendmentRail';
 import { ChangeSidebar } from './ChangeSidebar';
 import { DiffView } from './DiffView';
@@ -12,38 +16,61 @@ interface DiffWorkspaceProps {
   /** Shown above the split view when the two sides are identical. */
   identicalNote: string;
   banner?: ReactNode;
+  /** Paragraphs of a draft earlier than the Original, to spot clauses reverted to it. */
+  earlier?: string[];
 }
+
+const joined = (segments?: Segment[]) => (segments ?? []).map((s) => s.text).join('');
 
 /**
  * The full redline reading experience — change index, amendment rail, and the
  * split view — shared by the Compare tab and the Assemble deviation view.
  */
-export function DiffWorkspace({ diff, leftName, rightName, identicalNote, banner }: DiffWorkspaceProps) {
+export function DiffWorkspace({ diff, leftName, rightName, identicalNote, banner, earlier }: DiffWorkspaceProps) {
   const [activeHunk, setActiveHunk] = useState<number>();
 
   useEffect(() => {
     setActiveHunk(diff.hunks.length > 0 ? 0 : undefined);
   }, [diff]);
 
+  const changeParagraphs = useMemo(() => diff.rows.filter((r) => r.right).map((r) => joined(r.right)), [diff]);
+  const draftingNotes = useMemo(() => draftingChecks(changeParagraphs), [changeParagraphs]);
+  const reverted = useMemo(() => {
+    if (!earlier) return new Set<number>();
+    const original = diff.rows.filter((r) => r.left).map((r) => joined(r.left));
+    return revertedHunks(diff.hunks, earlier, original, changeParagraphs);
+  }, [diff, earlier, changeParagraphs]);
+
+  const handleExportRedline = async () => {
+    const name = rightName.replace(/\.(docx|pdf|txt|md)$/i, '');
+    downloadBlob(await exportRedlineBlob(diff.rows), `${name}-redline.docx`);
+  };
+
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
       <ChangeSidebar
         hunks={diff.hunks}
         activeHunk={activeHunk}
         onSelect={setActiveHunk}
         leftName={leftName}
         rightName={rightName}
+        reverted={reverted}
+        draftingNotes={draftingNotes}
+        documentText={changeParagraphs.join('\n')}
+        onExportRedline={() => void handleExportRedline()}
       />
-      <AmendmentRail diff={diff} activeHunk={activeHunk} onSelect={setActiveHunk} />
-      <main className="min-w-0 flex-1 overflow-y-auto bg-paper">
-        {banner}
-        {diff.hunks.length === 0 && (
-          <p className="border-b border-rule bg-paper-shade px-7 py-2 font-serif text-sm italic text-ink-muted">
-            {identicalNote}
-          </p>
-        )}
-        <DiffView diff={diff} originalName={leftName} changeName={rightName} activeHunk={activeHunk} />
-      </main>
+      <div className="flex min-h-0 flex-1">
+        <AmendmentRail diff={diff} activeHunk={activeHunk} onSelect={setActiveHunk} />
+        <main className="min-w-0 flex-1 overflow-y-auto bg-card">
+          {banner}
+          {diff.hunks.length === 0 && (
+            <p className="border-b border-line bg-page px-7 py-2 text-sm text-ink-soft">
+              {identicalNote}
+            </p>
+          )}
+          <DiffView diff={diff} originalName={leftName} changeName={rightName} activeHunk={activeHunk} />
+        </main>
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ describe('amendmentSummary', () => {
     expect(text).toContain('Redline: v1.docx → v2.docx');
     expect(text).toContain('2 amendments');
     expect(text).toMatch(/1\. \(¶ 2\)/);
-    expect(text).toContain('The fee is 20 dollars.');
+    expect(text).toContain('"10" → "20"');
     expect(text).toContain('A brand new clause.');
   });
 

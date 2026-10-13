@@ -34,7 +34,7 @@ async function exportedText(state: DealState): Promise<string> {
 describe('buildDocxDocument', () => {
   it('exports a Word document that round-trips with numbering and field values intact', async () => {
     const text = await exportedText(deal);
-    expect(text).toContain('Master Equity Swap Agreement (Sample)');
+    expect(text).toContain('Master Equity Swap Agreement');
     expect(text).toContain('between Alpha Bank plc ("Party A") and Beta Fund LP ("Party B")');
     // ROFR toggled in: it takes Clause 7 and Termination shifts to 8.
     expect(text).toContain('7. Right of First Refusal.');

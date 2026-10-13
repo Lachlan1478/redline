@@ -1,3 +1,5 @@
+import type { Flag } from './materiality';
+
 /** A run of text inside one paragraph cell. */
 export type SegmentType = 'unchanged' | 'added' | 'removed';
 
@@ -19,13 +21,26 @@ export interface DiffRow {
   hunkIndex?: number;
 }
 
-/** A contiguous run of changed rows — one navigable "change". */
+/** One contiguous edit: the text removed and the text that replaced it (either may be empty). */
+export interface WordEdit {
+  removed: string;
+  added: string;
+  /** True when a whole paragraph was added or deleted. */
+  paragraph?: boolean;
+}
+
+/** A contiguous run of changed rows within one clause — one navigable "change". */
 export interface ChangeHunk {
   index: number;
   rowStart: number;
   /** Inclusive end row. */
   rowEnd: number;
-  /** Short excerpt used as a label in the sidebar. */
+  /** Clause reference, e.g. "cl 11(a)" or "Schedule 1", when the document is numbered. */
+  clause?: string;
+  edits: WordEdit[];
+  /** Figure, obligation-word and risk-term flags for triage. */
+  flags: Flag[];
+  /** Clause reference and the changed words, e.g. `cl 5: "five" → "three"`. */
   summary: string;
 }
 

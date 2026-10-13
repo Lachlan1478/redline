@@ -81,12 +81,51 @@ describe('diffDocuments', () => {
     const allRemoved = diffDocuments(['old clause gone'], []);
     expect(allRemoved.rows.map((r) => r.type)).toEqual(['removed']);
     expect(allRemoved.hunks).toHaveLength(1);
-    expect(allRemoved.hunks[0].summary).toBe('old clause gone');
+    expect(allRemoved.hunks[0].summary).toBe('Deleted "old clause gone"');
   });
 
   it('returns no hunks for identical documents', () => {
     const { rows, hunks } = diffDocuments(original, original);
     expect(hunks).toEqual([]);
     expect(rows.every((r) => r.type === 'unchanged')).toBe(true);
+  });
+
+  it('starts a new hunk at each numbered clause, even when changes are contiguous', () => {
+    const { hunks } = diffDocuments(
+      ['12. Conditions apply.', '13. Conduct in the ordinary course.', '14. Completion deliverables.'],
+      ['12. Conditions apply now.', '13. Conduct with Buyer consent.', '14. Completion deliverables and a deed of release.'],
+    );
+    expect(hunks.map((h) => [h.rowStart, h.rowEnd])).toEqual([[0, 0], [1, 1], [2, 2]]);
+    expect(hunks[2].summary).toBe('cl 14: inserted "and a deed of release"');
+  });
+
+  it('keeps sub-paragraphs with their clause and labels them', () => {
+    const { hunks } = diffDocuments(
+      ['3. Payments.', '(a) Party A pays the Equity Amount.', '(b) Party B pays a spread of 85 basis points.'],
+      ['3. Payments.', '(a) Party A pays the Equity Amount.', '(b) Party B pays a spread of 95 basis points.'],
+    );
+    expect(hunks).toHaveLength(1);
+    expect(hunks[0].summary).toBe('cl 3(b): "85" → "95"');
+  });
+
+  it('labels decimal-numbered clauses and Schedules', () => {
+    const { hunks } = diffDocuments(
+      ['1.1 The cap is 10%.', 'Schedule 1 Warranties.'],
+      ['1.1 The cap is 30%.', 'Schedule 1 Buyer warranties.'],
+    );
+    expect(hunks.map((h) => h.summary)).toEqual(['cl 1.1: "10" → "30"', 'Schedule 1: "Warranties" → "Buyer warranties"']);
+  });
+
+  it('summarises each edit in a clause and caps the list', () => {
+    const { hunks } = diffDocuments(
+      ['5. Party A is not liable for any loss.'],
+      ['5. Party B is fully liable for all loss.'],
+    );
+    expect(hunks[0].summary).toBe('cl 5: "A" → "B"; "not" → "fully"; "any" → "all"');
+    const many = diffDocuments(
+      ['7. The seller must pay within ten days after the buyer gives written notice of any claim.'],
+      ['7. The vendor must pay within five days after the purchaser gives written notice of every claim.'],
+    );
+    expect(many.hunks[0].summary).toMatch(/; \+1 more$/);
   });
 });
